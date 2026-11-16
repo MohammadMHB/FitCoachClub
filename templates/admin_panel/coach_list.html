@@ -1,0 +1,214 @@
+{% extends "admin_panel/base_admin.html" %}
+{% block title %}مربیان - FitCoach{% endblock %}
+{% block page_title %}مدیریت مربیان{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-user-tie text-accent"></i> مربیان</h2>
+  <a href="{% url 'admin_panel:coach_add' %}" class="btn btn-primary">
+    <i class="fas fa-plus"></i> مربی جدید
+  </a>
+</div>
+
+<!-- نمای موبایل: لیست جمع‌وجور مثل مخاطبین -->
+<div class="contact-list">
+  {% for coach in coaches %}
+  <div class="contact-row" onclick="openDetailSheet('sheet-c-{{ coach.pk }}')">
+    <div class="contact-avatar">{{ coach.first_name|slice:":1"|default:"?" }}</div>
+    <div class="contact-info">
+      <div class="contact-name">{{ coach.get_full_name|default:coach.username }}</div>
+      <div class="contact-badges">
+        <span class="badge badge-purple">{{ coach.trainees.count }} شاگرد</span>
+        <span class="badge {% if coach.is_active %}badge-success{% else %}badge-danger{% endif %}">
+          {% if coach.is_active %}فعال{% else %}غیرفعال{% endif %}
+        </span>
+      </div>
+    </div>
+    <i class="fas fa-chevron-left contact-chevron"></i>
+  </div>
+
+  <div class="detail-sheet" id="sheet-c-{{ coach.pk }}">
+    <div class="detail-sheet-handle"></div>
+    <div class="detail-sheet-header">
+      <div class="detail-sheet-avatar">{{ coach.first_name|slice:":1"|default:"?" }}</div>
+      <div>
+        <div class="detail-sheet-title">{{ coach.get_full_name|default:coach.username }}</div>
+        <div class="detail-sheet-sub">@{{ coach.username }}</div>
+      </div>
+      <button type="button" class="detail-sheet-close" onclick="closeAllSheets()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="detail-sheet-body">
+      <div class="detail-row"><span class="d-label">تلفن</span><span class="d-value" dir="ltr">{{ coach.phone|default:"-" }}</span></div>
+      <div class="detail-row"><span class="d-label">تعداد شاگردان</span><span class="d-value"><span class="badge badge-purple">{{ coach.trainees.count }}</span></span></div>
+      <div class="detail-row"><span class="d-label">وضعیت</span>
+        <span class="d-value">
+          <span class="badge {% if coach.is_active %}badge-success{% else %}badge-danger{% endif %}">
+            {% if coach.is_active %}فعال{% else %}غیرفعال{% endif %}
+          </span>
+        </span>
+      </div>
+      <div style="margin-top:0.85rem">
+        <div class="d-label" style="margin-bottom:0.4rem">لینک ثبت‌نام شاگرد</div>
+        <div style="display:flex;align-items:center;gap:0.4rem">
+          <input type="text" readonly value="{{ request.scheme }}://{{ request.get_host }}{% url 'coach_signup' coach.referral_code %}"
+                 id="reflink-m-{{ coach.pk }}"
+                 style="flex:1;min-width:0;font-size:0.72rem;background:var(--bg-card);border:1px solid var(--glass-border);border-radius:8px;padding:0.5rem 0.6rem;color:var(--text-secondary)"
+                 onclick="this.select()">
+          <button type="button" class="btn btn-sm btn-outline btn-icon" title="کپی لینک" onclick="copyRefLink('reflink-m-{{ coach.pk }}', this)">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="detail-sheet-actions">
+      <a href="{% url 'admin_panel:trainee_list' %}?coach={{ coach.pk }}" class="btn btn-primary"><i class="fas fa-users"></i> شاگردان</a>
+      <a href="{% url 'admin_panel:coach_edit' coach.pk %}" class="btn btn-outline"><i class="fas fa-edit"></i> ویرایش</a>
+      <button type="button" class="btn btn-success"
+              onclick="copyInviteMessageForCoach('{{ coach.get_full_name|default:coach.username|escapejs }}','{{ coach.username|escapejs }}','{{ coach.last_password_plain|default:''|escapejs }}')">
+        <i class="fas fa-paper-plane"></i> ارسال
+      </button>
+      <form method="POST" action="{% url 'admin_panel:coach_toggle' coach.pk %}" style="flex:1;min-width:44%">
+        {% csrf_token %}
+        <button class="btn btn-warning" style="width:100%">
+          <i class="fas {% if coach.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+          {% if coach.is_active %}غیرفعال کن{% else %}فعال کن{% endif %}
+        </button>
+      </form>
+      <form method="POST" action="{% url 'admin_panel:coach_delete' coach.pk %}" id="delcoach-m-{{ coach.pk }}" style="flex:1;min-width:44%">
+        {% csrf_token %}
+        <button type="button" class="btn btn-danger" style="width:100%"
+                onclick="confirmDelete('delcoach-m-{{ coach.pk }}','حذف مربی {{ coach.get_full_name }}؟')">
+          <i class="fas fa-trash"></i> حذف
+        </button>
+      </form>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state"><i class="fas fa-user-tie"></i><p>مربی ثبت نشده</p></div>
+  {% endfor %}
+</div>
+<div class="sheet-backdrop" id="sheetBackdrop" onclick="closeAllSheets()"></div>
+
+<!-- نمای دسکتاپ: همون جدول قبلی -->
+<div class="table-container">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>#</th><th>نام</th><th>نام کاربری</th><th>تلفن</th><th>شاگردان</th><th>لینک ثبت‌نام</th><th>وضعیت</th><th>عملیات</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for coach in coaches %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <div class="user-avatar" style="width:30px;height:30px;font-size:0.75rem">{{ coach.first_name|slice:":1"|default:"?" }}</div>
+            {{ coach.get_full_name|default:coach.username }}
+          </div>
+        </td>
+        <td><code style="color:var(--accent-light)">{{ coach.username }}</code></td>
+        <td dir="ltr">{{ coach.phone|default:"-" }}</td>
+        <td><span class="badge badge-purple">{{ coach.trainees.count }}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:0.35rem">
+            <input type="text" readonly value="{{ request.scheme }}://{{ request.get_host }}{% url 'coach_signup' coach.referral_code %}"
+                   id="reflink-{{ coach.pk }}"
+                   style="width:120px;font-size:0.7rem;background:var(--bg-secondary);border:1px solid var(--glass-border);border-radius:6px;padding:0.3rem 0.4rem;color:var(--text-secondary)"
+                   onclick="this.select()">
+            <button type="button" class="btn btn-sm btn-outline btn-icon" title="کپی لینک"
+                    onclick="copyRefLink('reflink-{{ coach.pk }}', this)">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+        </td>
+        <td>
+          <span class="badge {% if coach.is_active %}badge-success{% else %}badge-danger{% endif %}">
+            {% if coach.is_active %}فعال{% else %}غیرفعال{% endif %}
+          </span>
+        </td>
+        <td>
+          <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
+            <a href="{% url 'admin_panel:trainee_list' %}?coach={{ coach.pk }}" class="btn btn-sm btn-primary btn-icon" title="مشاهده شاگردان"><i class="fas fa-users"></i></a>
+            <button type="button" class="btn btn-sm btn-success btn-icon" title="ارسال یوزر/پسورد"
+                    onclick="copyInviteMessageForCoach('{{ coach.get_full_name|default:coach.username|escapejs }}','{{ coach.username|escapejs }}','{{ coach.last_password_plain|default:''|escapejs }}')">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+            <a href="{% url 'admin_panel:coach_edit' coach.pk %}" class="btn btn-sm btn-outline btn-icon"><i class="fas fa-edit"></i></a>
+            <form method="POST" action="{% url 'admin_panel:coach_toggle' coach.pk %}" style="display:inline">
+              {% csrf_token %}
+              <button class="btn btn-sm btn-warning btn-icon" title="فعال/غیرفعال">
+                <i class="fas {% if coach.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+              </button>
+            </form>
+            <form method="POST" action="{% url 'admin_panel:coach_delete' coach.pk %}" id="delcoach-{{ coach.pk }}" style="display:inline">
+              {% csrf_token %}
+              <button type="button" class="btn btn-sm btn-danger btn-icon"
+                      onclick="confirmDelete('delcoach-{{ coach.pk }}','حذف مربی {{ coach.get_full_name }}؟')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8"><div class="empty-state"><i class="fas fa-user-tie"></i><p>مربی ثبت نشده</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <i class="fas fa-exclamation-triangle" style="font-size:2rem;color:var(--danger);margin-bottom:1rem"></i>
+    <h3>تأیید حذف</h3><p id="confirmMessage"></p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="confirmBtn">حذف</button>
+      <button class="btn btn-outline" onclick="closeModal('confirmModal')">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyInviteMessageForCoach(fullName, username, password) {
+  const siteUrl = window.location.origin + "{% url 'accounts:login' %}";
+  let message = `سلام ${fullName} 👋
+دسترسیت به پنل مربی فیت‌کوچ آماده‌ست!
+
+آدرس سایت: ${siteUrl}
+نام کاربری: ${username}`;
+
+  if (password) {
+    message += `\nرمز عبور: ${password}`;
+  } else {
+    message += `\nرمز عبور: (از فرم «ویرایش» یه رمز جدید براش تنظیم کن)`;
+  }
+
+  message += `
+
+برای دسترسی راحت‌تر، بعد از ورود از منوی مرورگر گزینه‌ی «افزودن به صفحه اصلی» (Add to Home Screen) رو بزنه تا مثل یه اپ روی گوشیش داشته باشه.
+
+موفق باشی 💪`;
+
+  copyTextToClipboard(message);
+}
+
+function copyRefLink(inputId, btn) {
+  const input = document.getElementById(inputId);
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value).then(() => {
+    const icon = btn.querySelector('i');
+    const original = icon.className;
+    icon.className = 'fas fa-check';
+    btn.classList.add('btn-success');
+    setTimeout(() => {
+      icon.className = original;
+      btn.classList.remove('btn-success');
+    }, 1500);
+  }).catch(() => {
+    document.execCommand('copy');
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "admin_panel/base_admin.html" %}
+{% block title %}داشبورد ادمین - FitCoach{% endblock %}
+{% block page_title %}داشبورد مدیریت{% endblock %}
+
+{% block extra_css %}
+<style>
+.stat-card { align-items: center; text-align: center; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2>پنل مدیریت FitCoach</h2>
+    <p class="text-muted" style="font-size:0.85rem;margin-top:0.25rem">خوش آمدید، {{ user.get_full_name|default:user.username }}</p>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon ic-purple"><i class="fas fa-user-tie"></i></div>
+    <div class="stat-value">{{ coaches_count }}</div>
+    <div class="stat-label">مربیان</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon ic-blue"><i class="fas fa-users"></i></div>
+    <div class="stat-value">{{ trainees_count }}</div>
+    <div class="stat-label">شاگردان</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon ic-green"><i class="fas fa-dumbbell"></i></div>
+    <div class="stat-value">{{ exercises_count }}</div>
+    <div class="stat-label">حرکات عمومی</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon ic-yellow"><i class="fas fa-clipboard-list"></i></div>
+    <div class="stat-value">{{ programs_count }}</div>
+    <div class="stat-label">برنامه‌های کل</div>
+  </div>
+</div>
+
+<div class="dashboard-two-col">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-user-tie text-accent"></i> آخرین مربیان</span>
+      <a href="{% url 'admin_panel:coach_list' %}" class="btn btn-sm btn-outline">همه</a>
+    </div>
+    {% for coach in recent_coaches %}
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:1px solid var(--glass-border)">
+      <div class="user-avatar" style="width:32px;height:32px;font-size:0.85rem">{{ coach.first_name|slice:":1"|default:"?" }}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.875rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ coach.get_full_name|default:coach.username }}</div>
+        <div style="font-size:0.72rem;color:var(--text-muted)">{{ coach.trainees.count }} شاگرد</div>
+      </div>
+      <span class="badge {% if coach.is_active %}badge-success{% else %}badge-danger{% endif %}">
+        {% if coach.is_active %}فعال{% else %}غیرفعال{% endif %}
+      </span>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="padding:1rem"><i class="fas fa-user-tie"></i><p>مربی ثبت نشده</p></div>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-users text-accent"></i> آخرین شاگردان</span>
+      <a href="{% url 'admin_panel:trainee_list' %}" class="btn btn-sm btn-outline">همه</a>
+    </div>
+    {% for trainee in recent_trainees %}
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:1px solid var(--glass-border)">
+      <div class="user-avatar" style="width:32px;height:32px;font-size:0.85rem">{{ trainee.first_name|slice:":1"|default:"?" }}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.875rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ trainee.get_full_name|default:trainee.username }}</div>
+        <div style="font-size:0.72rem;color:var(--text-muted)">
+          {% if trainee.trainee_profile.coach %}
+            مربی: {{ trainee.trainee_profile.coach.get_full_name }}
+          {% else %}بدون مربی{% endif %}
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="padding:1rem"><i class="fas fa-users"></i><p>شاگرد ثبت نشده</p></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

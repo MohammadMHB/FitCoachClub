@@ -1,0 +1,311 @@
+{% extends "coach/base_coach.html" %}
+{% load coach_extras %}
+{% block title %}تنظیم رژیم غذایی - FitCoach{% endblock %}
+{% block page_title %}تنظیم رژیم غذایی{% endblock %}
+
+{% block extra_css %}
+<style>
+.meal-block {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.meal-block-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;
+}
+.meal-block label {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.85rem; font-weight: 700;
+}
+.meal-block textarea {
+  width: 100%; resize: vertical; min-height: 64px;
+  background: var(--bg-secondary); border: 1px solid var(--glass-border);
+  border-radius: 6px; color: var(--text-primary); padding: 0.6rem 0.75rem;
+  font-family: inherit; font-size: 0.85rem;
+}
+.meal-block textarea:focus { outline: none; border-color: var(--accent); }
+.day-tab.has-content {
+  border-color: var(--success); color: var(--success);
+}
+.day-tab.active.has-content {
+  background: var(--success); border-color: var(--success); color: white;
+}
+
+/* --- انتخاب حالت ثبت --- */
+.mode-select { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+.mode-option {
+  cursor: pointer; padding: 1rem; border-radius: var(--radius-sm);
+  border: 2px solid var(--glass-border); background: var(--bg-card);
+  text-align: center; transition: all 0.2s;
+}
+.mode-option i { font-size: 1.4rem; display: block; margin-bottom: 0.4rem; color: var(--text-muted); }
+.mode-option .mode-title { font-weight: 700; font-size: 0.88rem; }
+.mode-option .mode-desc { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+.mode-option.active { border-color: var(--accent); background: var(--accent-glow); }
+.mode-option.active i, .mode-option.active .mode-title { color: var(--accent-light); }
+
+.bank-trigger-btn { display: none; }
+.bank-mode .bank-trigger-btn { display: inline-flex; }
+
+.fp-cat-btn.active-cat { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* --- پیکر بانک غذایی --- */
+.food-picker-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;
+  max-height: 300px; overflow-y: auto; padding: 0.4rem;
+}
+.food-picker-item {
+  padding: 0.55rem 0.75rem; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--glass-border); font-size: 0.8rem;
+  transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; gap: 0.4rem;
+}
+.food-picker-item:hover { background: var(--accent-glow); border-color: var(--accent); }
+.food-picker-item .fp-amount { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; }
+
+@media (max-width: 600px) {
+  .mode-select { grid-template-columns: 1fr; }
+  .food-picker-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2><i class="fas fa-utensils text-accent"></i> {% if edit_mode %}ویرایش رژیم غذایی{% else %}رژیم غذایی جدید{% endif %}</h2>
+    <p class="text-muted" style="font-size:0.82rem;margin-top:0.2rem">
+      برای: <strong>{{ profile.user.get_full_name|default:profile.user.username }}</strong>
+    </p>
+  </div>
+  <a href="{% if edit_mode %}{% url 'coach:nutrition_view' plan.pk %}{% else %}{% url 'coach:trainee_detail' profile.pk %}{% endif %}" class="btn btn-outline">
+    <i class="fas fa-arrow-right"></i> بازگشت
+  </a>
+</div>
+
+<!-- انتخاب حالت ثبت وعده‌ها -->
+<div class="card" style="margin-bottom:1rem;padding:1rem">
+  <p style="font-size:0.85rem;font-weight:700;margin-bottom:0.75rem">
+    <i class="fas fa-list-check text-accent"></i> روش ثبت وعده‌های غذایی رو انتخاب کن
+  </p>
+  <div class="mode-select" id="modeSelect">
+    <div class="mode-option active" id="modeOptManual" onclick="setMode('manual')">
+      <i class="fas fa-keyboard"></i>
+      <div class="mode-title">نوشتن دستی</div>
+      <div class="mode-desc">هر وعده رو خودت آزادانه تایپ کن</div>
+    </div>
+    <div class="mode-option" id="modeOptBank" onclick="setMode('bank')">
+      <i class="fas fa-carrot"></i>
+      <div class="mode-title">انتخاب از بانک غذایی</div>
+      <div class="mode-desc">مثل انتخاب حرکت، از لیست مواد غذایی سلکت کن</div>
+    </div>
+  </div>
+  <p style="font-size:0.72rem;color:var(--text-muted)">
+    <i class="fas fa-info-circle"></i> در هر دو حالت می‌تونی متن نهایی رو دستی هم ویرایش کنی.
+  </p>
+</div>
+
+<form method="POST" id="nutritionForm" action="{% if edit_mode %}{% url 'coach:nutrition_edit' plan.pk %}{% else %}{% url 'coach:nutrition_create' profile.pk %}{% endif %}">
+  {% csrf_token %}
+
+  <!-- عنوان -->
+  <div class="card" style="margin-bottom:1rem;padding:1rem">
+    <div class="form-row-3">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">عنوان رژیم</label>
+        <input type="text" name="title" class="form-control" placeholder="مثال: رژیم کاهش وزن ۳۰ روزه" value="{{ plan.title|default:'' }}" required>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">توضیحات کلی</label>
+        <input type="text" name="description" class="form-control" placeholder="اختیاری" value="{{ plan.description|default:'' }}">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">مدت رژیم (روز)</label>
+        <input type="number" name="duration_days" class="form-control" min="1" max="365"
+               placeholder="۳۰" value="{{ plan.duration_days|default:'30' }}" required>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="daysCard">
+    <!-- تب‌های روز -->
+    <div class="days-tabs" id="daysTabs">
+      {% for num, name in nutrition_day_choices %}
+      <button type="button" class="day-tab{% if forloop.first %} active{% endif %}"
+              data-day="{{ num }}" onclick="switchDay({{ num }})">
+        {{ name }}
+      </button>
+      {% endfor %}
+    </div>
+
+    <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem">
+      <i class="fas fa-info-circle"></i> هر وعده‌ای که خالی بمونه، برای شاگرد نمایش داده نمی‌شه. لازم نیست همه‌ی وعده‌های همه‌ی روزها پر بشه.
+    </p>
+
+    <!-- پانل هر روز -->
+    {% for num, name in nutrition_day_choices %}
+    <div class="day-panel" id="day-{{ num }}" style="{% if not forloop.first %}display:none{% endif %}">
+      <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:1rem">
+        <i class="fas fa-calendar-day text-accent"></i> {{ name }}
+      </h3>
+
+      {% for mt, mt_label in meal_type_choices %}
+      <div class="meal-block">
+        <div class="meal-block-head">
+          <label><i class="fas fa-utensils"></i> {{ mt_label }}</label>
+          <button type="button" class="btn btn-sm btn-outline bank-trigger-btn"
+                  onclick="openFoodPicker('ta_{{ num }}_{{ mt }}','{{ mt_label }}')">
+            <i class="fas fa-carrot"></i> افزودن از بانک غذایی
+          </button>
+        </div>
+        {% with key=num|stringformat:"s"|add:"_"|add:mt %}
+        <textarea name="day_{{ num }}_{{ mt }}" id="ta_{{ num }}_{{ mt }}" class="day-meal-input" data-day="{{ num }}"
+                  placeholder="مثلاً: ۲ عدد تخم‌مرغ آب‌پز + ۱ کف دست نان سنگک + خیار و گوجه">{{ existing_meals|get_item:key }}</textarea>
+        {% endwith %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+
+    <div style="display:flex;justify-content:flex-end;padding-top:1rem;border-top:1px solid var(--glass-border)">
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i> ذخیره رژیم غذایی
+      </button>
+    </div>
+  </div>
+</form>
+
+<!-- Food Bank Picker Modal -->
+<div class="modal-overlay" id="foodPickerModal" onclick="closeFoodPicker(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
+  <div class="card" style="width:min(94vw,560px);max-height:88vh;overflow:hidden;display:flex;flex-direction:column;padding:1rem" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap">
+      <span style="font-weight:700;font-size:0.9rem" id="fpTargetLabel"><i class="fas fa-carrot text-accent"></i> افزودن به وعده</span>
+      <input type="text" class="form-control" id="fpSearch" style="flex:1;min-width:150px" placeholder="جستجوی ماده غذایی..." oninput="renderFoodPicker()">
+      <button type="button" class="btn btn-outline btn-sm btn-icon" onclick="closeFoodPickerBtn()"><i class="fas fa-times"></i></button>
+    </div>
+    <div style="display:flex;gap:0.3rem;flex-wrap:wrap;margin-bottom:0.6rem" id="fpCatFilter">
+      <button type="button" class="btn btn-sm btn-outline fp-cat-btn active-cat" data-cat="" onclick="filterFoodCat('')">همه</button>
+      {% for val, label in food_category_choices %}
+      <button type="button" class="btn btn-sm btn-outline fp-cat-btn" data-cat="{{ val }}" onclick="filterFoodCat('{{ val }}')">{{ label }}</button>
+      {% endfor %}
+    </div>
+    <div class="food-picker-grid" id="foodPickerGrid"></div>
+    <div style="display:flex;justify-content:flex-end;padding-top:0.75rem;margin-top:0.5rem;border-top:1px solid var(--glass-border)">
+      <button type="button" class="btn btn-success btn-sm" onclick="closeFoodPickerBtn()">
+        <i class="fas fa-check"></i> تمام شد
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── داده بانک غذایی ─────────────────────────────────────────
+const FOOD_ITEMS = {{ food_items_json|default:"[]"|safe }};
+let fpCat = '';
+let fpTargetId = null;
+
+function setMode(mode) {
+  const form = document.getElementById('nutritionForm');
+  document.getElementById('modeOptManual').classList.toggle('active', mode === 'manual');
+  document.getElementById('modeOptBank').classList.toggle('active', mode === 'bank');
+  form.classList.toggle('bank-mode', mode === 'bank');
+}
+
+function switchDay(day) {
+  document.querySelectorAll('.day-panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('day-' + day).style.display = 'block';
+  document.querySelector('[data-day="' + day + '"]').classList.add('active');
+}
+
+function refreshTabIndicators() {
+  document.querySelectorAll('.day-panel').forEach(panel => {
+    const day = panel.id.replace('day-', '');
+    const hasContent = Array.from(panel.querySelectorAll('textarea')).some(t => t.value.trim().length > 0);
+    const tab = document.querySelector('[data-day="' + day + '"]');
+    tab.classList.toggle('has-content', hasContent);
+  });
+}
+
+document.querySelectorAll('.day-meal-input').forEach(el => {
+  el.addEventListener('input', refreshTabIndicators);
+});
+refreshTabIndicators();
+
+// ── پیکر بانک غذایی ──────────────────────────────────────────
+function openFoodPicker(targetTextareaId, mealLabel) {
+  fpTargetId = targetTextareaId;
+  document.getElementById('fpTargetLabel').innerHTML =
+    '<i class="fas fa-carrot text-accent"></i> افزودن به «' + mealLabel + '»';
+  document.getElementById('fpSearch').value = '';
+  filterFoodCat('');
+  document.getElementById('foodPickerModal').style.display = 'flex';
+}
+
+function closeFoodPicker(e) { if (e.target.id === 'foodPickerModal') closeFoodPickerBtn(); }
+function closeFoodPickerBtn() {
+  document.getElementById('foodPickerModal').style.display = 'none';
+  fpTargetId = null;
+}
+
+function filterFoodCat(cat) {
+  fpCat = cat;
+  document.querySelectorAll('.fp-cat-btn').forEach(b => {
+    b.classList.toggle('active-cat', b.dataset.cat === cat);
+  });
+  renderFoodPicker();
+}
+
+function renderFoodPicker() {
+  const q = document.getElementById('fpSearch').value.trim().toLowerCase();
+  const grid = document.getElementById('foodPickerGrid');
+  let list = FOOD_ITEMS;
+  if (fpCat) list = list.filter(f => f.category === fpCat);
+  if (q) list = list.filter(f => f.name.toLowerCase().includes(q));
+
+  if (!list.length) {
+    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-muted);font-size:0.82rem;padding:1rem">موردی یافت نشد</p>';
+    return;
+  }
+
+  grid.innerHTML = list.map(f => `
+    <div class="food-picker-item" onclick="pickFoodItem(${f.id})">
+      <span>${f.name}</span>
+      <span class="fp-amount">${f.amount ? f.amount + ' ' : ''}${f.unit_label}</span>
+    </div>
+  `).join('');
+}
+
+function pickFoodItem(id) {
+  const item = FOOD_ITEMS.find(f => f.id === id);
+  if (!item || !fpTargetId) return;
+  const ta = document.getElementById(fpTargetId);
+  if (!ta) return;
+  const line = (item.amount ? item.amount + ' ' : '') + item.unit_label + ' ' + item.name;
+  ta.value = ta.value.trim() ? (ta.value.trim() + '\n' + line) : line;
+  refreshTabIndicators();
+  showPickToast(item.name);
+}
+
+function showPickToast(name) {
+  let toast = document.getElementById('pickToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'pickToast';
+    toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);'
+      + 'background:var(--success);color:white;padding:0.6rem 1.2rem;border-radius:30px;'
+      + 'font-size:0.85rem;font-weight:600;z-index:10000;box-shadow:0 8px 24px rgba(0,0,0,0.3);'
+      + 'opacity:0;transition:opacity 0.25s';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = '<i class="fas fa-check"></i> ' + name + ' اضافه شد';
+  toast.style.opacity = '1';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.style.opacity = '0', 1200);
+}
+</script>
+{% endblock %}

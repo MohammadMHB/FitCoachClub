@@ -1,0 +1,92 @@
+{% extends "coach/base_coach.html" %}
+{% block title %}{{ plan.title }} - FitCoach{% endblock %}
+{% block page_title %}مشاهده رژیم غذایی{% endblock %}
+
+{% block extra_css %}
+<style>
+.meal-item {
+  display: flex; gap: 0.75rem; align-items: flex-start;
+  padding: 0.75rem; border-bottom: 1px solid var(--glass-border);
+}
+.meal-item:last-child { border-bottom: none; }
+.meal-icon {
+  width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+  background: var(--accent-glow); color: var(--accent-light);
+  display: flex; align-items: center; justify-content: center;
+}
+.meal-content-text { font-size: 0.85rem; line-height: 1.9; white-space: pre-wrap; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2><i class="fas fa-utensils text-accent"></i> {{ plan.title }}</h2>
+    <p class="text-muted" style="font-size:0.82rem;margin-top:0.25rem">
+      {{ plan.trainee.user.get_full_name }} | {{ plan.created_at|date:"Y/m/d" }}
+      <span class="badge {% if plan.is_active %}badge-success{% else %}badge-danger{% endif %}" style="margin-right:0.5rem">
+        {% if plan.is_active %}فعال{% else %}آرشیو{% endif %}
+      </span>
+      {% if plan.is_active %}
+        {% if plan.is_expired %}
+        <span class="badge badge-danger" style="margin-right:0.4rem"><i class="fas fa-hourglass-end"></i> منقضی شده</span>
+        {% elif plan.needs_renewal_soon %}
+        <span class="badge badge-warning" style="margin-right:0.4rem"><i class="fas fa-hourglass-half"></i> {{ plan.days_remaining }} روز مانده تا پایان</span>
+        {% else %}
+        <span class="badge badge-purple" style="margin-right:0.4rem"><i class="fas fa-hourglass-half"></i> {{ plan.days_remaining }} روز از {{ plan.duration_days }} روز باقی مانده</span>
+        {% endif %}
+      {% endif %}
+    </p>
+    {% if plan.description %}<p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.4rem">{{ plan.description }}</p>{% endif %}
+  </div>
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+    <a href="{% url 'coach:nutrition_edit' plan.pk %}" class="btn btn-primary">
+      <i class="fas fa-edit"></i> ویرایش رژیم
+    </a>
+    <a href="{% url 'coach:nutrition_copy' plan.pk %}" class="btn btn-outline">
+      <i class="fas fa-copy"></i> کپی برای شاگرد دیگر
+    </a>
+    <a href="{% url 'coach:trainee_detail' plan.trainee.pk %}" class="btn btn-outline">
+      <i class="fas fa-arrow-right"></i> بازگشت
+    </a>
+  </div>
+</div>
+
+{% for day in plan.days.all %}
+<div class="program-day-card">
+  <div class="program-day-header" onclick="toggleDay('nv-{{ day.pk }}',this)">
+    <i class="fas fa-calendar-day text-accent"></i>
+    <h3>{{ day.get_day_number_display }}</h3>
+    <div style="margin-right:auto;display:flex;align-items:center;gap:0.75rem">
+      <span class="badge badge-purple">{{ day.meals.count }} وعده</span>
+      <i class="fas fa-chevron-down" style="transition:transform 0.3s;font-size:0.8rem"></i>
+    </div>
+  </div>
+  <div class="program-day-body" id="nv-{{ day.pk }}">
+    {% if day.notes %}<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.75rem"><i class="fas fa-sticky-note"></i> {{ day.notes }}</p>{% endif %}
+    {% for meal in day.meals.all %}
+    <div class="meal-item">
+      <div class="meal-icon"><i class="fas fa-utensils"></i></div>
+      <div style="flex:1">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--accent-light);margin-bottom:0.2rem">{{ meal.get_meal_type_display }}</div>
+        <div class="meal-content-text">{{ meal.content }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% empty %}
+<div class="empty-state"><i class="fas fa-utensils"></i><p>این رژیم هنوز وعده‌ای ندارد</p></div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDay(id,header) {
+  const b=document.getElementById(id), i=header.querySelector('.fa-chevron-down');
+  const open = b.style.display!=='none';
+  b.style.display = open ? 'none' : 'block';
+  if(i) i.style.transform = open ? '' : 'rotate(180deg)';
+}
+</script>
+{% endblock %}

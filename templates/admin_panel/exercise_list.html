@@ -1,0 +1,196 @@
+{% extends "admin_panel/base_admin.html" %}
+{% block title %}حرکات عمومی - FitCoach{% endblock %}
+{% block page_title %}حرکات عمومی{% endblock %}
+
+{% block extra_css %}
+<style>
+.exercise-thumb { position:relative;overflow:hidden; }
+.exercise-thumb img { transition:transform 0.3s; }
+.exercise-thumb:hover img { transform:scale(1.08); }
+.exercise-thumb-btn {
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.45);opacity:0;transition:opacity 0.2s;cursor:zoom-in;
+}
+.exercise-thumb:hover .exercise-thumb-btn { opacity:1; }
+.cat-filter-wrap { position:relative; }
+.cat-menu {
+  display:none;position:absolute;top:calc(100% + 6px);right:0;
+  background:var(--bg-secondary);border:1px solid var(--glass-border);border-radius:var(--radius-sm);
+  box-shadow:0 12px 30px rgba(0,0,0,0.5);z-index:50;min-width:200px;
+  max-height:320px;overflow-y:auto;padding:0.4rem;
+}
+.cat-filter-wrap.open .cat-menu { display:block; }
+.cat-menu-item {
+  display:block;padding:0.55rem 0.75rem;border-radius:8px;font-size:0.85rem;
+  color:var(--text-secondary);text-decoration:none;transition:background 0.15s;
+}
+.cat-menu-item:hover { background:var(--accent-glow); }
+.cat-menu-item.active { background:var(--accent-glow);color:var(--accent-light);font-weight:700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-dumbbell text-accent"></i> حرکات عمومی</h2>
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+    <div class="cat-filter-wrap" id="catFilterWrap">
+      <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('catFilterWrap').classList.toggle('open')">
+        <i class="fas fa-filter"></i> {{ category_filter_label|default:"همه دسته‌ها" }}
+        <i class="fas fa-chevron-down" style="font-size:0.65rem"></i>
+      </button>
+      <div class="cat-menu">
+        <a href="{% url 'admin_panel:exercise_list' %}{% if search_query %}?q={{ search_query }}{% endif %}" class="cat-menu-item {% if not category_filter %}active{% endif %}">همه</a>
+        {% for val, label in cats %}
+        <a href="?category={{ val }}{% if search_query %}&q={{ search_query }}{% endif %}" class="cat-menu-item {% if category_filter == val %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    <a href="{% url 'admin_panel:exercise_add' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> حرکت جدید</a>
+  </div>
+</div>
+
+<!-- جستجو -->
+<form method="GET" style="margin-bottom:1.5rem;display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+  {% if category_filter %}<input type="hidden" name="category" value="{{ category_filter }}">{% endif %}
+  <div style="position:relative;flex:1;min-width:200px">
+    <i class="fas fa-search" style="position:absolute;top:50%;right:0.9rem;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem"></i>
+    <input type="text" name="q" class="form-control" value="{{ search_query }}"
+           placeholder="جستجوی نام حرکت..." style="padding-right:2.2rem;margin-bottom:0">
+  </div>
+  <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> جستجو</button>
+  {% if search_query %}
+  <a href="{% url 'admin_panel:exercise_list' %}{% if category_filter %}?category={{ category_filter }}{% endif %}" class="btn btn-outline btn-sm">
+    <i class="fas fa-times"></i> پاک کردن
+  </a>
+  {% endif %}
+</form>
+<div class="exercise-grid">
+  {% for ex in exercises %}
+  <div class="exercise-card">
+    <div class="exercise-thumb" onclick="zoomImg('{% if ex.image %}{{ ex.image.url }}{% endif %}','{{ ex.name }}')">
+      {% if ex.image %}
+        <img src="{{ ex.image.url }}" alt="{{ ex.name }}">
+        <div class="exercise-thumb-btn"><i class="fas fa-search-plus" style="color:white;font-size:1.5rem"></i></div>
+      {% else %}
+        <div style="width:100%;height:120px;display:flex;align-items:center;justify-content:center;background:rgba(108,99,255,0.08);color:var(--text-muted);font-size:2.5rem"><i class="fas fa-dumbbell"></i></div>
+      {% endif %}
+    </div>
+    <div class="exercise-info">
+      <div class="exercise-name">{{ ex.name }}</div>
+      <div class="exercise-cat">
+        <span class="badge badge-info" style="font-size:0.7rem">{{ ex.get_category_display }}</span>
+        {% if ex.visible_to_coach %}
+        <span class="badge badge-warning" style="font-size:0.7rem" title="فقط برای این مربی نمایش داده می‌شود">
+          <i class="fas fa-user-lock"></i> {{ ex.visible_to_coach.get_full_name|default:ex.visible_to_coach.username }}
+        </span>
+        {% else %}
+        <span class="badge badge-success" style="font-size:0.7rem"><i class="fas fa-globe"></i> عمومی</span>
+        {% endif %}
+      </div>
+      {% if ex.video or ex.video_url %}
+      <div style="margin-top:0.4rem">
+        <button type="button" class="btn btn-sm btn-outline" style="width:100%"
+                onclick="playVideo('{{ ex.video_url|default:'' }}{% if not ex.video_url and ex.video %}{{ ex.video.url }}{% endif %}','{{ ex.name }}')">
+          <i class="fas fa-play"></i> پخش ویدیو
+        </button>
+      </div>
+      {% endif %}
+      <div class="exercise-actions">
+        <a href="{% url 'admin_panel:exercise_edit' ex.pk %}" class="btn btn-sm btn-outline btn-icon"><i class="fas fa-edit"></i></a>
+        <form method="POST" action="{% url 'admin_panel:exercise_delete' ex.pk %}" id="delex-{{ ex.pk }}" style="display:inline">
+          {% csrf_token %}
+          <button type="button" class="btn btn-sm btn-danger btn-icon"
+                  onclick="confirmDelete('delex-{{ ex.pk }}','حذف حرکت {{ ex.name }}؟')">
+            <i class="fas fa-trash"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div style="grid-column:1/-1">
+    <div class="empty-state">
+      <i class="fas fa-dumbbell"></i>
+      <p>{% if search_query %}حرکتی با این نام پیدا نشد{% else %}حرکت عمومی ثبت نشده{% endif %}</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="pagination-bar">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm btn-outline">
+    <i class="fas fa-chevron-right"></i> قبلی
+  </a>
+  {% endif %}
+  <span style="font-size:0.8rem;color:var(--text-muted)">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm btn-outline">
+    بعدی <i class="fas fa-chevron-left"></i>
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <i class="fas fa-exclamation-triangle" style="font-size:2rem;color:var(--danger);margin-bottom:1rem"></i>
+    <h3>تأیید حذف</h3><p id="confirmMessage"></p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="confirmBtn">حذف</button>
+      <button class="btn btn-outline" onclick="closeModal('confirmModal')">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="videoModal" onclick="closeVideoModal()">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;max-width:92vw" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+      <h3 id="videoModalTitle" style="color:white;font-size:1rem"></h3>
+      <button class="btn btn-outline btn-sm" onclick="closeVideoModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <video id="videoPlayer" controls style="max-width:100%;max-height:75vh;border-radius:var(--radius);background:#000">
+      <source id="videoSrc" src="">
+    </video>
+  </div>
+</div>
+
+<div class="modal-overlay" id="imgModal" onclick="closeModal('imgModal')">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;max-width:92vw">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+      <h3 id="imgModalTitle" style="color:white;font-size:1rem"></h3>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('imgModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <img id="imgModalSrc" style="max-width:100%;max-height:80vh;border-radius:var(--radius);box-shadow:0 20px 60px rgba(0,0,0,0.8)">
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('catFilterWrap');
+  if (wrap && !wrap.contains(e.target)) wrap.classList.remove('open');
+});
+
+function zoomImg(url, title) {
+  if (!url) return;
+  document.getElementById('imgModalSrc').src = url;
+  document.getElementById('imgModalTitle').textContent = title || '';
+  document.getElementById('imgModal').classList.add('active');
+}
+function playVideo(url, title) {
+  if (!url) return;
+  document.getElementById('videoSrc').src = url;
+  document.getElementById('videoModalTitle').textContent = title || '';
+  document.getElementById('videoPlayer').load();
+  document.getElementById('videoModal').classList.add('active');
+}
+function closeVideoModal() {
+  document.getElementById('videoPlayer').pause();
+  document.getElementById('videoSrc').src = '';
+  document.getElementById('videoModal').classList.remove('active');
+}
+</script>
+{% endblock %}

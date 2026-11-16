@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#09090b">
+<title>{% block title %}FitCoach{% endblock %}</title>
+<link rel="manifest" href="/static/manifest.json">
+<link rel="apple-touch-icon" href="/static/img/icon-192.png">
+<style>
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/static/fonts/Vazirmatn-Regular.woff2') format('woff2');
+  font-weight: 400; font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/static/fonts/Vazirmatn-Bold.woff2') format('woff2');
+  font-weight: 700; font-display: swap;
+}
+</style>
+<link rel="stylesheet" href="/static/icons/fontawesome/css/all.min.css">
+<link rel="stylesheet" href="/static/css/main.css">
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+{% if user.is_authenticated %}
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-icon"><i class="fas fa-dumbbell"></i></span>
+    <span class="logo-text">FitCoach</span>
+  </div>
+  <nav class="sidebar-nav">
+    {% block sidebar_nav %}{% endblock %}
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar">
+        {{ user.first_name|slice:":1"|default:user.username|slice:":1" }}
+      </div>
+      <div class="user-meta">
+        <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+        <span class="user-role">{{ user.get_role_display }}</span>
+      </div>
+    </div>
+    <a href="{% url 'accounts:logout' %}" class="logout-btn" title="خروج">
+      <i class="fas fa-sign-out-alt"></i>
+    </a>
+  </div>
+</aside>
+
+<header class="topbar">
+  <button class="menu-toggle" id="menuToggle" aria-label="منو">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+  <div class="topbar-actions">
+    <button class="theme-toggle" id="themeToggle" title="تغییر تم">
+      <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+    {% block topbar_actions %}{% endblock %}
+    <a href="{% url 'accounts:change_password' %}" class="icon-btn" title="تغییر رمز">
+      <i class="fas fa-key"></i>
+    </a>
+  </div>
+</header>
+
+<main class="main-content">
+  {% if messages %}
+  <div class="messages-container">
+    {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }}">
+      <i class="fas {% if 'error' in msg.tags %}fa-times-circle{% elif 'success' in msg.tags %}fa-check-circle{% else %}fa-info-circle{% endif %}"></i>
+      {{ msg }}
+      <button class="alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<nav class="bottom-nav" id="bottomNav">
+  {% block bottom_nav %}{% endblock %}
+</nav>
+
+{% else %}
+
+{% block auth_content %}{% endblock %}
+
+{% endif %}
+
+<script src="/static/js/main.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

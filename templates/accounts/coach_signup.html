@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#09090b">
+<title>FitCoach - ثبت‌نام شاگرد جدید</title>
+<link rel="manifest" href="/static/manifest.json">
+<style>
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/static/fonts/Vazirmatn-Regular.woff2') format('woff2');
+  font-weight: 400; font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/static/fonts/Vazirmatn-Bold.woff2') format('woff2');
+  font-weight: 700; font-display: swap;
+}
+</style>
+<link rel="stylesheet" href="/static/icons/fontawesome/css/all.min.css">
+<link rel="stylesheet" href="/static/css/main.css">
+<style>
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(108,99,255,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(79,70,229,0.1) 0%, transparent 50%),
+    var(--bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+.login-card {
+  width: 100%;
+  max-width: 460px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  padding: 2.5rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+  position: relative;
+}
+[data-theme="light"] .login-card {
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(108,99,255,0.15);
+  box-shadow: 0 20px 60px rgba(108,99,255,0.15);
+}
+.login-logo { text-align: center; margin-bottom: 1.5rem; }
+.login-logo-icon {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, #6c63ff, #4f46e5);
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1rem;
+  font-size: 1.7rem;
+  color: white;
+  box-shadow: 0 8px 30px rgba(108,99,255,0.4);
+}
+.login-logo h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #a29bfe, #6c63ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.login-logo p { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.4rem; }
+.login-form { display: flex; flex-direction: column; gap: 1.1rem; }
+.form-row { display: flex; gap: 0.75rem; }
+.form-row .form-group { flex: 1; margin-bottom: 0; }
+.input-group { position: relative; }
+.input-group-icon {
+  position: absolute; top: 50%; right: 1rem;
+  transform: translateY(-50%);
+  color: var(--text-muted); font-size: 0.9rem;
+  pointer-events: none;
+}
+.input-group .form-control { padding-right: 2.75rem; }
+.password-toggle {
+  position: absolute; top: 50%; left: 1rem;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: var(--text-muted); cursor: pointer; font-size: 0.9rem; padding: 0;
+}
+.password-toggle:hover { color: var(--accent-light); }
+.input-group .form-control.has-toggle { padding-left: 2.75rem; }
+.btn-login {
+  padding: 0.875rem; font-size: 1rem; font-weight: 700; border-radius: 12px;
+  background: linear-gradient(135deg, #6c63ff, #4f46e5);
+  color: white; border: none; cursor: pointer; transition: all 0.25s;
+  box-shadow: 0 4px 20px rgba(108,99,255,0.35); letter-spacing: 0.03em;
+}
+.btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(108,99,255,0.5); filter: brightness(1.05); }
+.btn-login:active { transform: translateY(0); }
+.section-label {
+  font-size: 0.78rem; color: var(--text-muted); margin: 0.2rem 0 -0.3rem;
+}
+.field-hint {
+  font-size: 0.7rem; color: var(--text-muted); margin-top: 0.35rem;
+}
+.support-info {
+  text-align: center; margin-top: 1.5rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--glass-border);
+}
+.support-info p { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+.support-number { font-size: 1rem; font-weight: 700; color: var(--accent-light); direction: ltr; letter-spacing: 0.05em; }
+.theme-switch {
+  position: absolute; top: 1rem; left: 1rem; width: 36px; height: 36px;
+  background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-secondary); font-size: 0.9rem; transition: all 0.25s;
+}
+
+/* راهنمای «بعد از پر کردن این فرم چی می‌شه؟» */
+.how-it-works {
+  background: linear-gradient(135deg, rgba(108,99,255,0.1), rgba(79,70,229,0.05));
+  border: 1px solid rgba(108,99,255,0.2);
+  border-radius: 16px;
+  padding: 1.1rem 1.1rem 0.9rem;
+  margin-bottom: 1.5rem;
+}
+.how-it-works-title {
+  font-size: 0.85rem; font-weight: 700; color: var(--text-primary);
+  margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.4rem;
+}
+.how-it-works-title i { color: var(--accent-light); }
+.how-step {
+  display: flex; align-items: flex-start; gap: 0.65rem;
+  margin-bottom: 0.7rem; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6;
+}
+.how-step:last-child { margin-bottom: 0; }
+.how-step-num {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  background: linear-gradient(135deg, #6c63ff, #4f46e5);
+  color: white; font-size: 0.7rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 0.1rem;
+}
+.how-step b { color: var(--text-primary); }
+
+/* آپلود عکس بدن (فعلاً غیرفعال، فقط پیام "به‌زودی") */
+.photo-upload-card {
+  display: flex; align-items: center; gap: 0.9rem;
+  background: var(--bg-secondary);
+  border: 1.5px dashed var(--glass-border);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.25rem;
+  cursor: pointer; transition: all 0.25s;
+}
+.photo-upload-card:hover {
+  border-color: var(--accent-light);
+  background: rgba(108,99,255,0.08);
+}
+.photo-upload-icon {
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px;
+  background: rgba(108,99,255,0.15); color: var(--accent-light);
+  display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
+}
+.photo-upload-text { flex: 1; }
+.photo-upload-text .t1 { font-size: 0.82rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.15rem; }
+.photo-upload-text .t2 { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; }
+.photo-upload-soon {
+  flex-shrink: 0; font-size: 0.68rem; background: rgba(243,156,18,0.15);
+  color: var(--warning); padding: 0.25rem 0.55rem; border-radius: 20px; font-weight: 700;
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--bg-card); border: 1px solid rgba(108,99,255,0.3);
+  color: var(--text-primary); padding: 0.85rem 1.25rem; border-radius: 12px;
+  font-size: 0.82rem; display: flex; align-items: center; gap: 0.6rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+  opacity: 0; visibility: hidden; transition: all 0.3s ease;
+  z-index: 999; max-width: 90vw;
+}
+.toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+.toast i { color: var(--accent-light); font-size: 1rem; }
+</style>
+</head>
+<body>
+<div class="login-page">
+  <div class="login-card">
+    <button class="theme-switch" id="themeToggle" title="تغییر تم">
+      <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+
+    <div class="login-logo">
+      <div class="login-logo-icon"><i class="fas fa-dumbbell"></i></div>
+      <h1>FitCoach</h1>
+      <p>ثبت‌نام شاگرد جدید</p>
+    </div>
+
+    <div class="how-it-works">
+      <div class="how-it-works-title"><i class="fas fa-info-circle"></i> بعد از پر کردن این فرم چی می‌شه؟</div>
+      <div class="how-step">
+        <div class="how-step-num">۱</div>
+        <div class="how-step-text">مشخصاتت ثبت می‌شه و یه حساب کاربری برات ساخته می‌شه</div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">۲</div>
+        <div class="how-step-text">مربی‌ت (<b>{{ coach.get_full_name|default:coach.username }}</b>) برنامه‌ت رو طراحی می‌کنه</div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">۳</div>
+        <div class="how-step-text">با همون نام کاربری و رمزی که همین‌جا انتخاب می‌کنی، وارد پنل خودت می‌شی و برنامه رو می‌بینی</div>
+      </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages-container">
+      {% for msg in messages %}
+      <div class="alert alert-{{ msg.tags }}">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ msg }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" class="login-form">
+      {% csrf_token %}
+
+      <div class="photo-upload-card" onclick="showComingSoonToast()">
+        <div class="photo-upload-icon"><i class="fas fa-images"></i></div>
+        <div class="photo-upload-text">
+          <div class="t1">آپلود عکس‌</div>
+          <div class="t2">تا مربی راحت‌تر و دقیق‌تر برات برنامه بنویسه</div>
+        </div>
+        <div class="photo-upload-soon">به‌زودی</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="first_name">نام</label>
+          <input type="text" name="first_name" id="first_name" class="form-control"
+                 placeholder="محمد" required value="{{ form_data.first_name|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="last_name">نام‌خانوادگی</label>
+          <input type="text" name="last_name" id="last_name" class="form-control"
+                 placeholder="محبیان" required value="{{ form_data.last_name|default:'' }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="phone">شماره تلفن</label>
+        <div class="input-group">
+          <i class="fas fa-phone input-group-icon"></i>
+          <input type="tel" name="phone" id="phone" class="form-control" dir="ltr"
+                 placeholder="09xxxxxxxxx" required value="{{ form_data.phone|default:'' }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="username">نام کاربری</label>
+        <div class="input-group">
+          <i class="fas fa-user input-group-icon"></i>
+          <input type="text" name="username" id="username" class="form-control" dir="ltr"
+                 placeholder="mohammad.mhbn" required autocomplete="username"
+                 pattern="[A-Za-z0-9_.@+-]+"
+                 title="فقط حروف انگلیسی، عدد، و کاراکترهای . _ @ + - مجاز است"
+                 value="{{ form_data.username|default:'' }}">
+        </div>
+        <div class="field-hint">فقط حروف انگلیسی و عدد (بدون فاصله)</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">رمز عبور</label>
+        <div class="input-group">
+          <i class="fas fa-lock input-group-icon"></i>
+          <input type="password" name="password" id="password" class="form-control has-toggle" dir="ltr"
+                 placeholder="حداقل ۶ کاراکتر انگلیسی" required autocomplete="new-password"
+                 pattern="[^\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]+"
+                 title="رمز عبور نباید شامل حروف فارسی باشد">
+          <button type="button" class="password-toggle" onclick="togglePass()" tabindex="-1">
+            <i class="fas fa-eye" id="passIcon"></i>
+          </button>
+        </div>
+        <div class="field-hint">انگلیسی/عدد/نماد — بدون حروف فارسی</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="weight">وزن (kg)</label>
+          <input type="number" step="0.1" name="weight" id="weight" class="form-control"
+                 placeholder="مثلاً 70" value="{{ form_data.weight|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="height">قد (cm)</label>
+          <input type="number" step="0.1" name="height" id="height" class="form-control"
+                 placeholder="مثلاً 175" value="{{ form_data.height|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="age">سن</label>
+          <input type="number" name="age" id="age" class="form-control"
+                 placeholder="مثلاً 25" value="{{ form_data.age|default:'' }}">
+        </div>
+      </div>
+
+      <button type="submit" class="btn-login">
+        <i class="fas fa-paper-plane"></i> ثبت‌نام
+      </button>
+    </form>
+
+    <div class="support-info">
+      <p><i class="fas fa-headset"></i> پشتیبانی</p>
+      <div class="support-number">09331842949</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <i class="fas fa-clock"></i>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon = document.getElementById('themeIcon');
+const html = document.documentElement;
+function setTheme(t) {
+  html.setAttribute('data-theme', t);
+  localStorage.setItem('fc_theme', t);
+  themeIcon.className = t === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+}
+setTheme(localStorage.getItem('fc_theme') || 'dark');
+themeToggle.addEventListener('click', () => {
+  setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
+
+function togglePass() {
+  const input = document.getElementById('password');
+  const icon = document.getElementById('passIcon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'fas fa-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'fas fa-eye';
+  }
+}
+
+let toastTimer;
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = message;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+function showComingSoonToast() {
+  showToast('این قابلیت به‌زودی فعال می‌شه :)');
+}
+</script>
+</body>
+</html>

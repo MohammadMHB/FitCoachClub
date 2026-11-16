@@ -1,0 +1,147 @@
+{% extends "coach/base_coach.html" %}
+{% block title %}{% if action == 'add' %}افزودن{% else %}ویرایش{% endif %} شاگرد - FitCoach{% endblock %}
+{% block page_title %}{% if action == 'add' %}افزودن شاگرد{% else %}ویرایش شاگرد{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>
+    <i class="fas {% if action == 'add' %}fa-user-plus{% else %}fa-user-edit{% endif %} text-accent"></i>
+    {% if action == 'add' %}افزودن شاگرد جدید{% else %}ویرایش: {{ profile.user.get_full_name }}{% endif %}
+  </h2>
+  <a href="{% url 'coach:trainee_list' %}" class="btn btn-outline">
+    <i class="fas fa-arrow-right"></i> بازگشت
+  </a>
+</div>
+
+<div class="card" style="max-width:700px">
+  <form method="POST">
+    {% csrf_token %}
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">نام</label>
+        <input type="text" name="first_name" class="form-control" required
+               value="{{ profile.user.first_name|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">نام خانوادگی</label>
+        <input type="text" name="last_name" class="form-control" required
+               value="{{ profile.user.last_name|default:'' }}">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">نام کاربری</label>
+        <input type="text" name="username" class="form-control" required
+               value="{{ profile.user.username|default:'' }}"
+               {% if action == 'edit' %}autocomplete="off"{% endif %}>
+      </div>
+      <div class="form-group">
+        <label class="form-label">شماره تلفن</label>
+        <input type="tel" name="phone" class="form-control" dir="ltr"
+               value="{{ profile.user.phone|default:'' }}">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">
+        رمز عبور
+        {% if action == 'edit' %}<span style="font-weight:400;color:var(--text-muted)"> (خالی = تغییر نمی‌کند)</span>{% endif %}
+      </label>
+      <input type="password" name="password" class="form-control"
+             {% if action == 'add' %}required{% endif %}
+             autocomplete="new-password" placeholder="{% if action == 'edit' %}برای تغییر وارد کنید{% endif %}">
+    </div>
+
+    <div class="divider"></div>
+    <p class="text-muted" style="font-size:0.82rem;margin-bottom:1rem">
+      <i class="fas fa-info-circle"></i> اطلاعات جسمانی (BMI به صورت خودکار محاسبه می‌شود)
+    </p>
+
+    <div class="form-row-3">
+      <div class="form-group">
+        <label class="form-label">وزن (kg)</label>
+        <input type="number" name="weight" class="form-control" step="0.1" min="20" max="300"
+               value="{{ profile.weight|default:'' }}" id="weightInput">
+      </div>
+      <div class="form-group">
+        <label class="form-label">قد (cm)</label>
+        <input type="number" name="height" class="form-control" step="0.1" min="100" max="250"
+               value="{{ profile.height|default:'' }}" id="heightInput">
+      </div>
+      <div class="form-group">
+        <label class="form-label">سن</label>
+        <input type="number" name="age" class="form-control" min="5" max="120"
+               value="{{ profile.age|default:'' }}">
+      </div>
+    </div>
+
+    <!-- BMI Preview -->
+    <div id="bmiPreview" style="display:none;margin-bottom:1.25rem;padding:1rem;background:var(--bg-card);border:1px solid var(--glass-border);border-radius:var(--radius-sm)">
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+        <div>
+          <span style="font-size:0.78rem;color:var(--text-muted)">BMI محاسبه‌شده</span>
+          <div style="font-size:1.5rem;font-weight:700" id="bmiValue">-</div>
+        </div>
+        <div>
+          <span style="font-size:0.78rem;color:var(--text-muted)">وضعیت</span>
+          <div id="bmiStatus" style="font-weight:600">-</div>
+        </div>
+        <!-- BMI bar -->
+        <div style="flex:1;min-width:200px">
+          <div style="height:8px;background:var(--glass-border);border-radius:4px;overflow:hidden">
+            <div id="bmiBar" style="height:100%;width:0;border-radius:4px;transition:all 0.3s"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:var(--text-muted);margin-top:2px">
+            <span>لاغر &lt;18.5</span><span>نرمال 25-18.5</span><span>اضافه وزن 30-25</span><span>چاق &gt;30</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:1rem;justify-content:flex-end;flex-wrap:wrap">
+      <a href="{% url 'coach:trainee_list' %}" class="btn btn-outline">انصراف</a>
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i>
+        {% if action == 'add' %}ثبت شاگرد{% else %}ذخیره تغییرات{% endif %}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const weightInput = document.getElementById('weightInput');
+const heightInput = document.getElementById('heightInput');
+const bmiPreview = document.getElementById('bmiPreview');
+const bmiValue = document.getElementById('bmiValue');
+const bmiStatus = document.getElementById('bmiStatus');
+const bmiBar = document.getElementById('bmiBar');
+
+function calcBMI() {
+  const w = parseFloat(weightInput.value);
+  const h = parseFloat(heightInput.value);
+  if (!w || !h || h < 50) { bmiPreview.style.display = 'none'; return; }
+  const bmi = +(w / Math.pow(h/100, 2)).toFixed(1);
+  bmiPreview.style.display = 'block';
+  bmiValue.textContent = bmi;
+
+  let statusText, color, barWidth;
+  if (bmi < 18.5) { statusText = 'لاغر'; color = 'var(--info)'; barWidth = Math.min(bmi/18.5*25, 25); }
+  else if (bmi < 25) { statusText = 'نرمال ✓'; color = 'var(--success)'; barWidth = 25 + (bmi-18.5)/(25-18.5)*25; }
+  else if (bmi < 30) { statusText = 'اضافه وزن'; color = 'var(--warning)'; barWidth = 50 + (bmi-25)/(30-25)*25; }
+  else { statusText = 'چاق'; color = 'var(--danger)'; barWidth = Math.min(75 + (bmi-30)/10*25, 100); }
+
+  bmiStatus.textContent = statusText;
+  bmiStatus.style.color = color;
+  bmiBar.style.width = barWidth + '%';
+  bmiBar.style.background = color;
+}
+
+weightInput.addEventListener('input', calcBMI);
+heightInput.addEventListener('input', calcBMI);
+calcBMI();
+</script>
+{% endblock %}

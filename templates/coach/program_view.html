@@ -1,0 +1,160 @@
+{% extends "coach/base_coach.html" %}
+{% block title %}{{ program.title }} - FitCoach{% endblock %}
+{% block page_title %}مشاهده برنامه{% endblock %}
+
+{% block extra_css %}
+<style>
+.group-wrap { margin-bottom:0.75rem; }
+.group-wrap.superset { border-right:4px solid #f39c12;border-radius:var(--radius-sm);overflow:hidden; }
+.group-wrap.triset   { border-right:4px solid #3498db;border-radius:var(--radius-sm);overflow:hidden; }
+.group-wrap.dropset  { border-right:4px solid #e74c3c;border-radius:var(--radius-sm);overflow:hidden; }
+.group-label {
+  padding:0.4rem 1rem;font-size:0.75rem;font-weight:700;
+}
+.superset .group-label { background:rgba(243,156,18,0.1);color:#f39c12; }
+.triset   .group-label { background:rgba(52,152,219,0.1);color:#3498db; }
+.dropset  .group-label { background:rgba(231,76,60,0.1);color:#e74c3c; }
+.img-zoom { cursor:zoom-in;transition:transform 0.2s; }
+.img-zoom:hover { transform:scale(1.05); }
+/* روزهای برنامه به‌صورت پیش‌فرض بسته‌اند؛ با کلیک باز می‌شوند */
+.program-day-body { display:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2><i class="fas fa-clipboard-list text-accent"></i> {{ program.title }}</h2>
+    <p class="text-muted" style="font-size:0.82rem;margin-top:0.25rem">
+      {{ program.trainee.user.get_full_name }} | {{ program.created_at|date:"Y/m/d" }}
+      <span class="badge {% if program.is_active %}badge-success{% else %}badge-danger{% endif %}" style="margin-right:0.5rem">
+        {% if program.is_active %}فعال{% else %}آرشیو{% endif %}
+      </span>
+      {% if program.is_active %}
+        {% if program.is_expired %}
+        <span class="badge badge-danger" style="margin-right:0.4rem"><i class="fas fa-hourglass-end"></i> منقضی شده</span>
+        {% elif program.needs_renewal_soon %}
+        <span class="badge badge-warning" style="margin-right:0.4rem"><i class="fas fa-hourglass-half"></i> {{ program.days_remaining }} روز مانده تا پایان</span>
+        {% else %}
+        <span class="badge badge-purple" style="margin-right:0.4rem"><i class="fas fa-hourglass-half"></i> {{ program.days_remaining }} روز از {{ program.duration_days }} روز باقی مانده</span>
+        {% endif %}
+      {% endif %}
+    </p>
+  </div>
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+    <a href="{% url 'coach:program_edit' program.pk %}" class="btn btn-primary">
+      <i class="fas fa-edit"></i> ویرایش برنامه
+    </a>
+    <a href="{% url 'coach:program_copy' program.pk %}" class="btn btn-outline">
+      <i class="fas fa-copy"></i> کپی برای شاگرد دیگر
+    </a>
+    <a href="{% url 'coach:trainee_detail' program.trainee.pk %}" class="btn btn-outline">
+      <i class="fas fa-arrow-right"></i> بازگشت
+    </a>
+  </div>
+</div>
+
+{% for day in program.days.all %}
+<div class="program-day-card">
+  <div class="program-day-header" onclick="toggleDay('dv-{{ day.pk }}',this)">
+    <i class="fas fa-calendar-day text-accent"></i>
+    <h3>{{ day.get_day_number_display }}</h3>
+    <div style="margin-right:auto;display:flex;align-items:center;gap:0.75rem">
+      <span class="badge badge-purple">{{ day.exercises.count }} حرکت</span>
+      <i class="fas fa-chevron-down" style="transition:transform 0.3s;font-size:0.8rem"></i>
+    </div>
+  </div>
+  <div class="program-day-body" id="dv-{{ day.pk }}">
+    {% if day.notes %}<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.75rem"><i class="fas fa-sticky-note"></i> {{ day.notes }}</p>{% endif %}
+
+    {# گروه‌بندی حرکات بر اساس group_id #}
+    {% regroup day.exercises.all by group_id as grouped_exercises %}
+    {% for grp in grouped_exercises %}
+    {% with first=grp.list.0 %}
+    <div class="group-wrap {{ first.set_type }}">
+      {% if first.set_type != 'normal' %}
+      <div class="group-label">
+        {% if first.set_type == 'superset' %}🔗 سوپرست{% elif first.set_type == 'triset' %}📚 تری‌ست{% elif first.set_type == 'dropset' %}🔽 دراپ‌ست{% endif %}
+        — {{ grp.list|length }} حرکت
+      </div>
+      {% endif %}
+      {% for wex in grp.list %}
+      <div class="exercise-row" style="border-bottom:1px solid var(--glass-border);padding:0.75rem">
+        <div class="exercise-thumb-sm" onclick="zoomImg(this)" style="cursor:zoom-in">
+          {% if wex.exercise.image %}<img src="{{ wex.exercise.image.url }}" alt="{{ wex.exercise.name }}" class="img-zoom">
+          {% else %}<i class="fas fa-dumbbell"></i>{% endif %}
+        </div>
+        <div class="exercise-details">
+          <h4>{{ wex.exercise.name }}
+            <span style="font-size:0.72rem;color:var(--text-muted);font-weight:400">{{ wex.exercise.get_category_display }}</span>
+          </h4>
+          <div class="exercise-meta">
+            <span class="meta-chip"><i class="fas fa-layer-group"></i> {{ wex.sets }} ست</span>
+            <span class="meta-chip"><i class="fas fa-redo"></i> {{ wex.reps }} تکرار</span>
+            <span class="meta-chip"><i class="fas fa-clock"></i> {{ wex.rest_seconds }}s</span>
+            {% if wex.dropset_weights %}<span class="meta-chip" style="color:#e74c3c"><i class="fas fa-arrow-down"></i> {{ wex.dropset_weights }} kg</span>{% endif %}
+          </div>
+          {% if wex.notes %}<div style="font-size:0.78rem;color:var(--accent-light);margin-top:0.3rem"><i class="fas fa-comment"></i> {{ wex.notes }}</div>{% endif %}
+        </div>
+        {% if wex.exercise.video_url or wex.exercise.video %}
+        <a href="{{ wex.exercise.video_url|default:wex.exercise.video.url }}" target="_blank"
+           class="btn btn-sm btn-outline btn-icon" title="ویدیو"><i class="fas fa-play"></i></a>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+</div>
+{% empty %}
+<div class="empty-state"><i class="fas fa-clipboard"></i><p>این برنامه روزی ندارد</p></div>
+{% endfor %}
+
+<!-- Image Zoom Modal -->
+<div class="modal-overlay" id="imgModal" onclick="closeModal('imgModal')">
+  <div style="max-width:90vw;max-height:90vh;display:flex;align-items:center;justify-content:center">
+    <img id="imgModalSrc" style="max-width:100%;max-height:90vh;border-radius:var(--radius);box-shadow:0 20px 60px rgba(0,0,0,0.8)">
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDay(id,header) {
+  const b=document.getElementById(id);
+  const isOpen = b.classList.contains('open');
+  if (isOpen) { closeDayPanel(id); } else { openDayPanel(id); }
+}
+const _dayAutoCloseTimers = {};
+const DAY_AUTO_CLOSE_MS = 3 * 60 * 1000; // ۳ دقیقه
+function openDayPanel(id) {
+  const b = document.getElementById(id);
+  if (!b) return;
+  const header = b.previousElementSibling;
+  const icon = header ? header.querySelector('.fa-chevron-down') : null;
+  b.style.display = 'block';
+  b.classList.add('open');
+  if (icon) icon.style.transform = 'rotate(180deg)';
+  if (_dayAutoCloseTimers[id]) clearTimeout(_dayAutoCloseTimers[id]);
+  _dayAutoCloseTimers[id] = setTimeout(() => closeDayPanel(id), DAY_AUTO_CLOSE_MS);
+}
+function closeDayPanel(id) {
+  const b = document.getElementById(id);
+  if (!b) return;
+  const header = b.previousElementSibling;
+  const icon = header ? header.querySelector('.fa-chevron-down') : null;
+  b.style.display = 'none';
+  b.classList.remove('open');
+  if (icon) icon.style.transform = '';
+  if (_dayAutoCloseTimers[id]) { clearTimeout(_dayAutoCloseTimers[id]); delete _dayAutoCloseTimers[id]; }
+}
+
+function zoomImg(el) {
+  const img = el.querySelector('img');
+  if (!img) return;
+  document.getElementById('imgModalSrc').src = img.src;
+  document.getElementById('imgModal').classList.add('active');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "coach/base_coach.html" %}
+{% block title %}داشبورد مربی - FitCoach{% endblock %}
+{% block page_title %}داشبورد{% endblock %}
+
+{% block extra_css %}
+<style>
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+  .stat-card {
+    padding: 0.6rem 0.4rem;
+    align-items: center;
+    text-align: center;
+    gap: 0.25rem;
+  }
+  .stat-icon { width: 30px; height: 30px; font-size: 0.85rem; }
+  .stat-value { font-size: 1.05rem; }
+  .stat-label { font-size: 0.62rem; line-height:1.2; }
+}
+.stat-card { align-items: center; text-align: center; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon ic-purple"><i class="fas fa-users"></i></div>
+    <div class="stat-value">{{ trainees.count }}</div>
+    <div class="stat-label">کل شاگردان</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon ic-green"><i class="fas fa-user-check"></i></div>
+    <div class="stat-value">{{ active_trainees }}</div>
+    <div class="stat-label">شاگردان فعال</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon ic-red"><i class="fas fa-clipboard-list"></i></div>
+    <div class="stat-value">{{ total_programs }}</div>
+    <div class="stat-label">کل برنامه‌های ثبت‌شده</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:1.5rem">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-link text-accent"></i> لینک اختصاصی ثبت‌نام شاگرد</span>
+  </div>
+  <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem">
+    این لینک رو بذار تو بیوی اینستاگرام یا هرجای دیگه. هر کی روش کلیک کنه، خودش
+    ثبت‌نام می‌کنه و مستقیم به‌عنوان شاگرد تو اضافه می‌شه.
+  </p>
+  <div style="display:flex;gap:0.5rem">
+    <input type="text" readonly value="{{ signup_link }}" id="coachSignupLink" dir="ltr"
+           style="flex:1;min-width:0;font-size:0.8rem;background:var(--bg-secondary);border:1px solid var(--glass-border);border-radius:8px;padding:0.6rem 0.75rem;color:var(--text-secondary)"
+           onclick="this.select()">
+    <button type="button" class="btn btn-primary btn-icon" title="کپی لینک" onclick="copySignupLink(this)">
+      <i class="fas fa-copy"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+function copySignupLink(btn) {
+  const input = document.getElementById('coachSignupLink');
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value).then(() => {
+    const icon = btn.querySelector('i');
+    icon.className = 'fas fa-check';
+    setTimeout(() => { icon.className = 'fas fa-copy'; }, 1500);
+  }).catch(() => {
+    document.execCommand('copy');
+  });
+}
+</script>
+{% endblock %}

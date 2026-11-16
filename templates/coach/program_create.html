@@ -1,0 +1,884 @@
+{% extends "coach/base_coach.html" %}
+{% block title %}تنظیم برنامه - FitCoach{% endblock %}
+{% block page_title %}تنظیم برنامه تمرینی{% endblock %}
+
+{% block extra_css %}
+<style>
+.set-type-badge {
+  display:inline-flex;align-items:center;gap:0.3rem;
+  padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:700;
+}
+.badge-superset { background:rgba(243,156,18,0.2);color:#f39c12;border:1px solid rgba(243,156,18,0.4); }
+.badge-triset   { background:rgba(52,152,219,0.2);color:#3498db;border:1px solid rgba(52,152,219,0.4); }
+.badge-dropset  { background:rgba(231,76,60,0.2);color:#e74c3c;border:1px solid rgba(231,76,60,0.4); }
+
+.group-block {
+  border-radius:var(--radius-sm);margin-bottom:0.75rem;overflow:hidden;
+}
+.group-block.superset { border-right:4px solid #f39c12; }
+.group-block.triset   { border-right:4px solid #3498db; }
+.group-block.dropset  { border-right:4px solid #e74c3c; }
+.group-block.normal   { border-right:4px solid var(--glass-border); }
+
+.group-header {
+  padding:0.5rem 1rem;display:flex;align-items:center;gap:0.75rem;
+  font-size:0.78rem;font-weight:700;
+}
+.superset .group-header { background:rgba(243,156,18,0.1); }
+.triset   .group-header { background:rgba(52,152,219,0.1); }
+.dropset  .group-header { background:rgba(231,76,60,0.1); }
+.normal   .group-header { background:rgba(255,255,255,0.03); }
+
+.ex-row {
+  background:var(--bg-card);padding:0.875rem 1rem;
+  border-bottom:1px solid var(--glass-border);
+}
+.ex-row:last-child { border-bottom:none; }
+
+.ex-row-grid {
+  display:grid;gap:0.5rem;margin-top:0.5rem;
+  grid-template-columns:minmax(0,60px) minmax(0,90px) minmax(0,100px) minmax(0,1fr);
+}
+.ex-row-grid input,
+.ex-row-grid .form-control { min-width:0; width:100%; box-sizing:border-box; }
+
+.dropset-weights {
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:0.4rem;
+  margin-top:0.5rem;padding:0.5rem;
+  background:rgba(231,76,60,0.06);border-radius:6px;
+}
+
+.ex-picker-grid {
+  display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;
+  max-height:260px;overflow-y:auto;padding:0.4rem;
+}
+.ex-picker-item {
+  padding:0.5rem 0.75rem;border-radius:6px;cursor:pointer;
+  border:1px solid var(--glass-border);font-size:0.82rem;
+  transition:all 0.2s;
+}
+.ex-picker-item:hover { background:var(--accent-glow);border-color:var(--accent); }
+
+.day-tab { position:relative; }
+.day-count-badge {
+  position:absolute;top:-6px;left:-6px;
+  background:var(--success);color:white;
+  font-size:0.6rem;width:16px;height:16px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-weight:700;
+}
+
+/* ── دکمه‌ی اصلی + منوی کوچک انواع پیشرفته ── */
+.day-actions-row { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; position:relative; }
+.advanced-menu-wrap { position:relative; }
+.advanced-menu-btn {
+  width:38px; height:38px; border-radius:10px;
+  background:var(--bg-card); border:1px solid var(--glass-border);
+  color:var(--text-secondary); display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+}
+.advanced-menu-btn:hover { border-color:var(--accent); color:var(--accent-light); }
+.advanced-menu {
+  display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:50;
+  background:var(--bg-secondary); border:1px solid var(--glass-border);
+  border-radius:var(--radius-sm); padding:0.4rem; min-width:190px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.4);
+}
+.advanced-menu.open { display:block; }
+.advanced-menu button {
+  width:100%; text-align:right; background:none; border:none; padding:0.55rem 0.7rem;
+  border-radius:8px; font-size:0.82rem; cursor:pointer; display:flex; align-items:center; gap:0.5rem;
+  color:var(--text-primary);
+}
+.advanced-menu button:hover { background:var(--bg-card-hover); }
+
+/* ── کپی روز ── */
+.copy-day-menu {
+  display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:50;
+  background:var(--bg-secondary); border:1px solid var(--glass-border);
+  border-radius:var(--radius-sm); padding:0.75rem; min-width:220px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.4);
+}
+.copy-day-menu.open { display:block; }
+.copy-day-menu label {
+  display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.2rem;
+  font-size:0.82rem; cursor:pointer;
+}
+
+/* ── جابه‌جایی ترتیب ── */
+.reorder-btns { display:flex; flex-direction:column; gap:2px; }
+.reorder-btns button {
+  width:22px; height:18px; padding:0; font-size:0.65rem;
+  background:var(--bg-card); border:1px solid var(--glass-border); border-radius:4px;
+  color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.reorder-btns button:hover:not(:disabled) { color:var(--accent-light); border-color:var(--accent); }
+.reorder-btns button:disabled { opacity:0.3; cursor:default; }
+
+/* ── نوار اعمال سریع به همه ── */
+.quick-fill-bar {
+  display:flex; align-items:end; gap:0.5rem; flex-wrap:wrap;
+  padding:0.7rem 0.85rem; margin-bottom:0.85rem;
+  background:rgba(108,99,255,0.06); border:1px dashed rgba(108,99,255,0.3);
+  border-radius:var(--radius-sm);
+}
+.quick-fill-bar .qf-field { width:78px; }
+.quick-fill-bar .qf-field label { font-size:0.68rem; color:var(--text-muted); display:block; margin-bottom:2px; }
+.quick-fill-bar .qf-field input { padding:0.4rem 0.5rem; font-size:0.8rem; }
+
+/* ── تصویر کوچک حرکت تو پیکر ── */
+.ex-picker-item { display:flex; align-items:center; gap:0.6rem; }
+.picker-thumb {
+  width:36px; height:36px; border-radius:8px; flex-shrink:0; object-fit:cover;
+  background:var(--bg-secondary);
+}
+.picker-thumb-placeholder {
+  width:36px; height:36px; border-radius:8px; flex-shrink:0;
+  background:var(--accent-glow); color:var(--accent-light);
+  display:flex; align-items:center; justify-content:center; font-size:0.9rem;
+}
+
+/* موبایل: حرکات زیر هم (تک‌ستونی)، نه فشرده و اسکرول‌دار */
+@media (max-width: 640px) {
+  .ex-picker-grid { grid-template-columns: 1fr; }
+  .ex-picker-item { max-width:100%; box-sizing:border-box; min-width:0; }
+  .ex-picker-item > div:last-child { min-width:0; overflow:hidden; }
+  .picker-thumb, .picker-thumb-placeholder { width:30px; height:30px; font-size:0.75rem; }
+  .ex-row-grid { grid-template-columns: repeat(3, minmax(0,1fr)); gap:0.4rem; }
+  .ex-row { padding:0.7rem 0.75rem; }
+  .ex-row-grid input { padding:0.45rem 0.4rem; font-size:0.82rem; }
+  .ex-row .ex-name-text {
+    max-width:150px; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; display:inline-block; vertical-align:middle;
+  }
+  /* شبکه‌ی ضامن: هیچ عنصری اجازه نداره باعث اسکرول افقی کل صفحه بشه */
+  .card, .day-panel, #picker-1, #picker-2, #picker-3, #picker-4, #picker-5, #picker-6 {
+    max-width: 100%; overflow-x: hidden; box-sizing: border-box;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2><i class="fas fa-clipboard-list text-accent"></i> {% if edit_mode %}ویرایش برنامه{% else %}برنامه جدید{% endif %}</h2>
+    <p class="text-muted" style="font-size:0.82rem;margin-top:0.2rem">
+      برای: <strong>{{ profile.user.get_full_name|default:profile.user.username }}</strong>
+    </p>
+  </div>
+  <a href="{% if edit_mode %}{% url 'coach:program_view' program.pk %}{% else %}{% url 'coach:trainee_detail' profile.pk %}{% endif %}" class="btn btn-outline">
+    <i class="fas fa-arrow-right"></i> بازگشت
+  </a>
+</div>
+
+<form method="POST" id="programForm" action="{% if edit_mode %}{% url 'coach:program_edit' program.pk %}{% else %}{% url 'coach:program_create' profile.pk %}{% endif %}">
+  {% csrf_token %}
+  <input type="hidden" name="days_data" id="daysDataInput">
+
+  <!-- عنوان -->
+  <div class="card" style="margin-bottom:1rem;padding:1rem">
+    <div class="form-row-3">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">عنوان برنامه</label>
+        <input type="text" name="title" class="form-control" placeholder="مثال: برنامه حجمی ۶ روزه" value="{{ program.title|default:'' }}" required>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">توضیحات کلی</label>
+        <input type="text" name="description" class="form-control" placeholder="اختیاری" value="{{ program.description|default:'' }}">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">مدت برنامه (روز)</label>
+        <input type="number" name="duration_days" class="form-control" min="1" max="365"
+               placeholder="۳۰" value="{{ program.duration_days|default:'30' }}" required>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <!-- تب‌های روز -->
+    <div class="days-tabs" id="daysTabs">
+      {% for num, name in day_choices %}
+      <button type="button" class="day-tab{% if forloop.first %} active{% endif %}"
+              data-day="{{ num }}" onclick="switchDay({{ num }})">
+        {{ name }}
+        <span class="day-count-badge" id="cnt-{{ num }}" style="display:none">0</span>
+      </button>
+      {% endfor %}
+    </div>
+
+    <!-- پانل هر روز -->
+    {% for num, name in day_choices %}
+    <div class="day-panel" id="day-{{ num }}" style="{% if not forloop.first %}display:none{% endif %}">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem">
+        <h3 style="font-size:0.95rem;font-weight:700"><i class="fas fa-calendar-day text-accent"></i> {{ name }}</h3>
+        <div class="day-actions-row">
+          <button type="button" class="btn btn-primary btn-sm" onclick="openPicker({{ num }},'normal')">
+            <i class="fas fa-plus"></i> افزودن حرکت
+          </button>
+
+          <div class="advanced-menu-wrap">
+            <button type="button" class="advanced-menu-btn" title="انواع پیشرفته (سوپرست/تری‌ست/دراپ‌ست)"
+                    onclick="toggleAdvancedMenu({{ num }})">
+              <i class="fas fa-ellipsis-vertical"></i>
+            </button>
+            <div class="advanced-menu" id="advMenu-{{ num }}">
+              <button type="button" onclick="openPicker({{ num }},'superset'); closeAllMenus()">
+                <i class="fas fa-link" style="color:#f39c12"></i> سوپرست
+              </button>
+              <button type="button" onclick="openPicker({{ num }},'triset'); closeAllMenus()">
+                <i class="fas fa-layer-group" style="color:#3498db"></i> تری‌ست
+              </button>
+              <button type="button" onclick="openPicker({{ num }},'dropset'); closeAllMenus()">
+                <i class="fas fa-arrow-down" style="color:#e74c3c"></i> دراپ‌ست
+              </button>
+            </div>
+          </div>
+
+          <div class="advanced-menu-wrap">
+            <button type="button" class="btn btn-outline btn-sm" onclick="toggleCopyMenu({{ num }})">
+              <i class="fas fa-copy"></i> کپی به روز دیگر
+            </button>
+            <div class="copy-day-menu" id="copyMenu-{{ num }}">
+              <div style="font-size:0.8rem;font-weight:700;margin-bottom:0.5rem">کپی «{{ name }}» به:</div>
+              {% for d2num, d2name in day_choices %}
+              {% if d2num != num %}
+              <label>
+                <input type="checkbox" value="{{ d2num }}" class="copy-target-{{ num }}"> {{ d2name }}
+              </label>
+              {% endif %}
+              {% endfor %}
+              <button type="button" class="btn btn-success btn-sm" style="width:100%;margin-top:0.6rem;justify-content:center"
+                      onclick="copyDayTo({{ num }})">
+                <i class="fas fa-check"></i> کپی کن
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- انتخاب حرکت -->
+      <div id="picker-{{ num }}" style="display:none;margin-bottom:1rem;padding:1rem;background:var(--bg-card);border:1px solid var(--glass-border);border-radius:var(--radius-sm)">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap">
+          <span id="picker-label-{{ num }}" style="font-size:0.82rem;font-weight:700"></span>
+          <input type="text" class="form-control" style="flex:1;min-width:150px"
+                 placeholder="جستجو..." oninput="filterEx({{ num }},this.value)">
+          <button type="button" class="btn btn-success btn-sm" onclick="closePicker({{ num }})">
+            <i class="fas fa-check"></i> تمام شد
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="closePicker({{ num }})">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <!-- فیلتر دسته‌بندی -->
+        <div style="display:flex;gap:0.3rem;flex-wrap:wrap;margin-bottom:0.5rem" id="catFilter-{{ num }}">
+          <button type="button" class="btn btn-sm btn-outline active-cat" onclick="filterCat({{ num }},'')">همه</button>
+          {% for val, label in category_choices %}
+          <button type="button" class="btn btn-sm btn-outline" onclick="filterCat({{ num }},'{{ val }}')">{{ label }}</button>
+          {% endfor %}
+        </div>
+        <div class="ex-picker-grid" id="exPicker-{{ num }}"></div>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem" id="picker-hint-{{ num }}"></p>
+      </div>
+
+      <!-- یادداشت روز -->
+      <input type="text" class="form-control" id="note-{{ num }}"
+             placeholder="یادداشت روز (اختیاری)" style="margin-bottom:1rem">
+
+      <!-- لیست حرکات -->
+      <div class="quick-fill-bar" id="qfBar-{{ num }}" style="display:none">
+        <div class="qf-field">
+          <label>ست</label>
+          <input type="number" class="form-control" id="qfSets-{{ num }}" min="1" max="20" placeholder="۳">
+        </div>
+        <div class="qf-field">
+          <label>تکرار</label>
+          <input type="text" class="form-control" id="qfReps-{{ num }}" placeholder="۱۲">
+        </div>
+        <div class="qf-field">
+          <label>استراحت (ث)</label>
+          <input type="number" class="form-control" id="qfRest-{{ num }}" min="0" placeholder="۶۰">
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="applyToAll({{ num }})">
+          <i class="fas fa-wand-magic-sparkles"></i> اعمال به همه‌ی حرکات این روز
+        </button>
+      </div>
+      <div id="exList-{{ num }}"></div>
+      <div id="empty-{{ num }}" class="empty-state" style="padding:1.5rem">
+        <i class="fas fa-dumbbell"></i><p>حرکتی انتخاب نشده</p>
+      </div>
+    </div>
+    {% endfor %}
+
+    <div style="display:flex;justify-content:flex-end;padding-top:1rem;border-top:1px solid var(--glass-border)">
+      <button type="button" class="btn btn-primary" id="saveProgramBtn" onclick="submitProgram()">
+        <i class="fas fa-save"></i> <span id="saveProgramBtnLabel">ذخیره برنامه</span>
+      </button>
+    </div>
+  </div>
+</form>
+
+<!-- Notes Popup -->
+<div class="modal-overlay" id="notesModal" onclick="closeNotesPopup()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
+  <div class="card" style="width:min(92vw,420px);padding:1.2rem" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <span style="font-weight:700;font-size:0.95rem"><i class="fas fa-comment-alt text-accent"></i> یادداشت حرکت</span>
+      <button type="button" class="btn btn-sm btn-outline btn-icon" onclick="closeNotesPopup()"><i class="fas fa-times"></i></button>
+    </div>
+    <textarea id="notesInput" class="form-control" rows="4" placeholder="توضیحات یا نکات اجرایی..." style="resize:none;font-size:0.9rem"></textarea>
+    <div style="display:flex;gap:0.5rem;margin-top:1rem;justify-content:flex-end">
+      <button type="button" class="btn btn-outline" onclick="closeNotesPopup()">انصراف</button>
+      <button type="button" class="btn btn-primary" onclick="saveNotes()"><i class="fas fa-check"></i> ثبت</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const EXERCISES = {{ exercises_json|safe }};
+
+const CAT = {{ category_choices_json|safe }};
+const SET_LABELS = {normal:'معمولی',superset:'سوپرست',triset:'تری‌ست',dropset:'دراپ‌ست'};
+
+// dayData[day] = { notes:'', groups:[ {type, exercises:[{...}]} ] }
+const dayData = {};
+{% for num, name in day_choices %}dayData[{{ num }}] = {notes:'', groups:[]};{% endfor %}
+
+let currentDay = 1;
+let currentPickerType = 'normal';
+let currentPickerCat = '';
+let groupIdCounter = 0;
+let exIdCounter = 0;
+
+// escape امن برای درج داخل HTML/attribute‌ها (جلوگیری از خراب شدن ساختار
+// صفحه اگر اسم حرکت یا یادداشت حاوی نقل‌قول یا کاراکترهای خاص باشه)
+function escHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function escJs(str) {
+  return String(str == null ? '' : str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+// ── روز switch ──────────────────────────────────────────────
+function switchDay(num) {
+  document.querySelectorAll('.day-panel').forEach(p => p.style.display='none');
+  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('day-'+num).style.display = 'block';
+  document.querySelector('[data-day="'+num+'"]').classList.add('active');
+  currentDay = num;
+  closePicker(num);
+  closeAllMenus();
+}
+
+// ── منوهای کوچک (انواع پیشرفته / کپی روز) ───────────────────
+function closeAllMenus() {
+  document.querySelectorAll('.advanced-menu.open, .copy-day-menu.open').forEach(m => m.classList.remove('open'));
+}
+
+function toggleAdvancedMenu(day) {
+  const menu = document.getElementById('advMenu-'+day);
+  const wasOpen = menu.classList.contains('open');
+  closeAllMenus();
+  if (!wasOpen) menu.classList.add('open');
+}
+
+function toggleCopyMenu(day) {
+  const menu = document.getElementById('copyMenu-'+day);
+  const wasOpen = menu.classList.contains('open');
+  closeAllMenus();
+  if (!wasOpen) menu.classList.add('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.advanced-menu-wrap')) closeAllMenus();
+});
+
+// ── کپی یک روز به روزهای دیگر ────────────────────────────────
+function copyDayTo(fromDay) {
+  const checks = document.querySelectorAll('.copy-target-'+fromDay+':checked');
+  if (!checks.length) {
+    alert('حداقل یک روز مقصد رو انتخاب کن.');
+    return;
+  }
+  const targets = Array.from(checks).map(c => parseInt(c.value));
+  targets.forEach(toDay => {
+    // کپی عمیق با gid/uid تازه، تا با روز مبدا مستقل باشن
+    const clonedGroups = dayData[fromDay].groups.map(g => ({
+      gid: ++groupIdCounter,
+      type: g.type,
+      exercises: g.exercises.map(ex => ({...ex, uid: ++exIdCounter, drops: ex.drops ? [...ex.drops] : []})),
+    }));
+    dayData[toDay].groups = clonedGroups;
+    const fromNoteEl = document.getElementById('note-'+fromDay);
+    const toNoteEl = document.getElementById('note-'+toDay);
+    if (fromNoteEl && toNoteEl) toNoteEl.value = fromNoteEl.value;
+    renderDay(toDay);
+    updateDayCount(toDay);
+  });
+  closeAllMenus();
+  showPickToast('برنامه به ' + targets.length + ' روز دیگر کپی شد');
+}
+
+// ── جابه‌جایی ترتیب گروه‌ها (بالا/پایین) ──────────────────────
+function moveGroup(day, gid, dir) {
+  const groups = dayData[day].groups;
+  const idx = groups.findIndex(g => g.gid === gid);
+  if (idx === -1) return;
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= groups.length) return;
+  [groups[idx], groups[newIdx]] = [groups[newIdx], groups[idx]];
+  renderDay(day);
+}
+
+// ── اعمال سریع ست/تکرار/استراحت به همه‌ی حرکات یک روز ─────────
+function applyToAll(day) {
+  const setsVal = document.getElementById('qfSets-'+day).value;
+  const repsVal = document.getElementById('qfReps-'+day).value;
+  const restVal = document.getElementById('qfRest-'+day).value;
+  if (!setsVal && !repsVal && !restVal) {
+    alert('حداقل یکی از فیلدهای ست/تکرار/استراحت رو پر کن.');
+    return;
+  }
+  dayData[day].groups.forEach(g => {
+    g.exercises.forEach(ex => {
+      if (setsVal) ex.sets = +setsVal;
+      if (repsVal) ex.reps = repsVal;
+      if (restVal) ex.rest = +restVal;
+    });
+  });
+  renderDay(day);
+  showPickToast('برای همه‌ی حرکات اعمال شد');
+}
+
+// ── picker ───────────────────────────────────────────────────
+function openPicker(day, type) {
+  currentPickerType = type;
+  currentPickerCat  = '';
+  const picker = document.getElementById('picker-'+day);
+  picker.style.display = 'block';
+
+  const labels = {
+    normal:   '➕ انتخاب حرکت معمولی',
+    superset: '🔗 سوپرست — ۲ حرکت انتخاب کنید (با هم اجرا می‌شوند)',
+    triset:   '📚 تری‌ست — ۳ حرکت انتخاب کنید (پشت سر هم)',
+    dropset:  '🔽 دراپ‌ست — یک حرکت با کاهش وزن',
+  };
+  const hints = {
+    normal:   '',
+    superset: 'دو حرکت انتخاب کنید — بین آن‌ها استراحت نیست',
+    triset:   'سه حرکت انتخاب کنید — پشت سر هم بدون استراحت',
+    dropset:  'یک حرکت انتخاب کنید — وزن‌های هر دراپ بعداً تنظیم می‌شود',
+  };
+  document.getElementById('picker-label-'+day).textContent = labels[type];
+  document.getElementById('picker-hint-'+day).textContent  = hints[type];
+  renderPicker(day, '');
+  // reset cat buttons
+  document.querySelectorAll('#catFilter-'+day+' button').forEach(b => b.classList.remove('btn-primary'));
+  document.querySelector('#catFilter-'+day+' button').classList.add('btn-primary');
+}
+
+function closePicker(day) {
+  document.getElementById('picker-'+day).style.display = 'none';
+}
+
+function filterCat(day, cat) {
+  currentPickerCat = cat;
+  document.querySelectorAll('#catFilter-'+day+' button').forEach(b => {
+    b.classList.remove('btn-primary');
+    b.classList.add('btn-outline');
+  });
+  event.target.classList.add('btn-primary');
+  event.target.classList.remove('btn-outline');
+  const q = document.querySelector('#picker-'+day+' input[type=text]')?.value || '';
+  renderPicker(day, q);
+}
+
+function filterEx(day, q) {
+  renderPicker(day, q);
+}
+
+function renderPicker(day, q) {
+  const container = document.getElementById('exPicker-'+day);
+  const filtered = EXERCISES.filter(e => {
+    const matchQ   = !q || e.name.includes(q) || (CAT[e.category]||'').includes(q);
+    const matchCat = !currentPickerCat || e.category === currentPickerCat;
+    return matchQ && matchCat;
+  });
+  container.innerHTML = filtered.length
+    ? filtered.map(e => `
+        <div class="ex-picker-item" onclick="pickExercise(${day}, ${e.id}, '${escHtml(escJs(e.name))}', '${escHtml(escJs(e.category))}')">
+          ${e.image_url
+            ? `<img class="picker-thumb" src="${escHtml(e.image_url)}" alt="" onerror="this.outerHTML='<div class=&quot;picker-thumb-placeholder&quot;><i class=&quot;fas fa-dumbbell&quot;></i></div>'">`
+            : `<div class="picker-thumb-placeholder"><i class="fas fa-dumbbell"></i></div>`}
+          <div style="min-width:0">
+            <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(e.name)}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted)">${escHtml(CAT[e.category]||e.category)}</div>
+          </div>
+        </div>`).join('')
+    : '<div style="padding:1rem;text-align:center;color:var(--text-muted);font-size:0.85rem;grid-column:1/-1">حرکتی پیدا نشد</div>';
+}
+
+// وقتی حرکت انتخاب می‌شه
+function pickExercise(day, exId, exName, exCat) {
+  const type = currentPickerType;
+  showPickToast(exName);
+
+  if (type === 'normal' || type === 'dropset') {
+    // یک گروه با یک حرکت
+    const gid = ++groupIdCounter;
+    const uid = ++exIdCounter;
+    const drops = type === 'dropset' ? ['','',''] : [];
+    dayData[day].groups.push({
+      gid, type,
+      exercises: [{uid, exercise_id:exId, name:exName, category:exCat,
+                   sets:3, reps:'12', rest:60, notes:'', drops}]
+    });
+    if (type === 'dropset') closePicker(day);
+    renderDay(day);
+    // برای 'normal' پیکر باز می‌ماند تا چند حرکت پشت سر هم اضافه شود
+
+  } else if (type === 'superset') {
+    // پیدا کردن گروه superset ناقص (< 2 حرکت)
+    let group = dayData[day].groups.find(g => g.type==='superset' && g.exercises.length < 2);
+    if (!group) {
+      group = {gid:++groupIdCounter, type:'superset', exercises:[]};
+      dayData[day].groups.push(group);
+    }
+    group.exercises.push({uid:++exIdCounter, exercise_id:exId, name:exName,
+                          category:exCat, sets:3, reps:'12', rest:60, notes:'', drops:[]});
+    if (group.exercises.length >= 2) closePicker(day);
+    renderDay(day);
+
+  } else if (type === 'triset') {
+    let group = dayData[day].groups.find(g => g.type==='triset' && g.exercises.length < 3);
+    if (!group) {
+      group = {gid:++groupIdCounter, type:'triset', exercises:[]};
+      dayData[day].groups.push(group);
+    }
+    group.exercises.push({uid:++exIdCounter, exercise_id:exId, name:exName,
+                          category:exCat, sets:3, reps:'12', rest:60, notes:'', drops:[]});
+    if (group.exercises.length >= 3) closePicker(day);
+    renderDay(day);
+  }
+  updateDayCount(day);
+}
+
+// ── رندر لیست حرکات یک روز ──────────────────────────────────
+function renderDay(day) {
+  const container = document.getElementById('exList-'+day);
+  const empty     = document.getElementById('empty-'+day);
+  const qfBar     = document.getElementById('qfBar-'+day);
+  const groups    = dayData[day].groups;
+  empty.style.display = groups.length ? 'none' : 'block';
+  qfBar.style.display = groups.length ? 'flex' : 'none';
+
+  container.innerHTML = groups.map((g, gi) => {
+    const typeColor = {superset:'#f39c12', triset:'#3498db', dropset:'#e74c3c', normal:'var(--glass-border)'};
+    const typeLabel = {superset:'🔗 سوپرست', triset:'📚 تری‌ست', dropset:'🔽 دراپ‌ست', normal:''};
+    const isFirst = gi === 0, isLast = gi === groups.length - 1;
+    const reorderBtns = `
+      <div class="reorder-btns">
+        <button type="button" title="جابه‌جایی به بالا" ${isFirst ? 'disabled' : ''} onclick="moveGroup(${day},${g.gid},-1)"><i class="fas fa-chevron-up"></i></button>
+        <button type="button" title="جابه‌جایی به پایین" ${isLast ? 'disabled' : ''} onclick="moveGroup(${day},${g.gid},1)"><i class="fas fa-chevron-down"></i></button>
+      </div>`;
+
+    const header = g.type !== 'normal' ? `
+      <div class="group-header">
+        ${reorderBtns}
+        <span style="color:${typeColor[g.type]}">${typeLabel[g.type]}</span>
+        <span style="color:var(--text-muted);font-size:0.7rem">${g.exercises.length} حرکت</span>
+        <button type="button" class="btn btn-sm btn-danger btn-icon" style="margin-right:auto;padding:2px 6px"
+                onclick="removeGroup(${day},${g.gid})"><i class="fas fa-trash"></i></button>
+      </div>` : '';
+
+    const exRows = g.exercises.map((ex, ei) => `
+      <div class="ex-row">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
+          <div style="display:flex;align-items:center;gap:0.6rem;min-width:0">
+            ${g.type === 'normal' ? reorderBtns : ''}
+            <div style="min-width:0">
+              <span class="ex-name-text" style="font-weight:600;font-size:0.875rem">${escHtml(ex.name)}</span>
+              <span style="font-size:0.72rem;color:var(--text-muted);margin-right:0.4rem">${escHtml(CAT[ex.category]||'')}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:0.3rem;align-items:center">
+            <button type="button" class="btn btn-sm btn-outline btn-icon" style="padding:2px 6px"
+                    title="یادداشت"
+                    onclick="openNotesPopup(${day},${g.gid},${ex.uid},this)"
+                    data-notes="${escHtml(ex.notes)}">
+              <i class="fas fa-comment-alt${ex.notes ? ' text-accent' : ''}"></i>
+            </button>
+            ${g.type === 'normal' || g.type === 'dropset' ? `
+            <button type="button" class="btn btn-sm btn-danger btn-icon" style="padding:2px 6px"
+                    onclick="removeGroup(${day},${g.gid})"><i class="fas fa-trash"></i></button>` : `
+            <button type="button" class="btn btn-sm btn-outline btn-icon" style="padding:2px 6px"
+                    onclick="removeEx(${day},${g.gid},${ex.uid})"><i class="fas fa-times"></i></button>`}
+          </div>
+        </div>
+
+        <div class="ex-row-grid">
+          <div>
+            <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:2px">ست</div>
+            <input type="number" class="form-control" value="${ex.sets}" min="1" max="20"
+                   oninput="updEx(${day},${g.gid},${ex.uid},'sets',+this.value)">
+          </div>
+          <div>
+            <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:2px">تکرار</div>
+            <input type="text" class="form-control" value="${ex.reps}"
+                   oninput="updEx(${day},${g.gid},${ex.uid},'reps',this.value)">
+          </div>
+          <div>
+            <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:2px">استراحت (ثانیه)</div>
+            <input type="number" class="form-control" value="${ex.rest}" min="0"
+                   oninput="updEx(${day},${g.gid},${ex.uid},'rest',+this.value)">
+          </div>
+
+        </div>
+
+        ${g.type === 'dropset' ? renderDropset(day, g.gid, ex) : ''}
+      </div>`).join('');
+
+    return `<div class="group-block ${g.type}" data-gid="${g.gid}">${header}${exRows}</div>`;
+  }).join('');
+}
+
+function renderDropset(day, gid, ex) {
+  const drops = ex.drops || ['','',''];
+  const inputs = drops.map((w,i) => `
+    <div>
+      <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:2px">دراپ ${i+1}</div>
+      <input type="number" class="form-control" value="${w}" placeholder="kg"
+             oninput="updDrop(${day},${gid},${ex.uid},${i},this.value)">
+    </div>`).join('');
+
+  return `
+    <div style="margin-top:0.5rem;padding:0.5rem;background:rgba(231,76,60,0.06);border-radius:6px">
+      <div style="font-size:0.75rem;color:#e74c3c;font-weight:700;margin-bottom:0.4rem">
+        <i class="fas fa-arrow-down"></i> وزن هر دراپ (kg)
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(${drops.length},1fr) auto;gap:0.4rem;align-items:end">
+        ${inputs}
+        <button type="button" class="btn btn-sm btn-outline" style="font-size:0.75rem;padding:0.4rem 0.5rem"
+                onclick="addDrop(${day},${gid},${ex.uid})">+ دراپ</button>
+      </div>
+    </div>`;
+}
+
+function addDrop(day, gid, uid) {
+  const g  = dayData[day].groups.find(g => g.gid===gid);
+  const ex = g?.exercises.find(e => e.uid===uid);
+  if (ex && ex.drops.length < 8) { ex.drops.push(''); renderDay(day); }
+}
+
+function updDrop(day, gid, uid, idx, val) {
+  const g  = dayData[day].groups.find(g => g.gid===gid);
+  const ex = g?.exercises.find(e => e.uid===uid);
+  if (ex) ex.drops[idx] = val;
+}
+
+function updEx(day, gid, uid, field, val) {
+  const g  = dayData[day].groups.find(g => g.gid===gid);
+  const ex = g?.exercises.find(e => e.uid===uid);
+  if (ex) ex[field] = val;
+}
+
+function removeGroup(day, gid) {
+  dayData[day].groups = dayData[day].groups.filter(g => g.gid !== gid);
+  renderDay(day);
+  updateDayCount(day);
+}
+
+function removeEx(day, gid, uid) {
+  const g = dayData[day].groups.find(g => g.gid===gid);
+  if (!g) return;
+  g.exercises = g.exercises.filter(e => e.uid !== uid);
+  if (!g.exercises.length) dayData[day].groups = dayData[day].groups.filter(g2 => g2.gid!==gid);
+  renderDay(day);
+  updateDayCount(day);
+}
+
+function updateDayCount(day) {
+  const total = dayData[day].groups.reduce((s,g) => s + g.exercises.length, 0);
+  const badge = document.getElementById('cnt-'+day);
+  const tab   = document.querySelector('[data-day="'+day+'"]');
+  badge.style.display = total ? 'flex' : 'none';
+  badge.textContent   = total;
+  tab.classList.toggle('has-exercises', total > 0);
+}
+
+// ── ارسال فرم ──────────────────────────────────────────────
+function submitProgram() {
+  const btn = document.getElementById('saveProgramBtn');
+  const btnLabel = document.getElementById('saveProgramBtnLabel');
+  if (btn && btn.disabled) return; // جلوگیری از دوبار کلیک
+
+  try {
+    {% for num, name in day_choices %}dayData[{{ num }}].notes = document.getElementById('note-{{ num }}').value;{% endfor %}
+
+    const output = {};
+    {% for num, name in day_choices %}
+    if (dayData[{{ num }}].groups.length) {
+      // تبدیل به فرمت قابل ارسال
+      const exList = [];
+      dayData[{{ num }}].groups.forEach((g, gi) => {
+        g.exercises.forEach((ex, ei) => {
+          exList.push({
+            exercise_id: ex.exercise_id,
+            sets: ex.sets, reps: ex.reps, rest: ex.rest,
+            set_type: g.type, notes: ex.notes,
+            group_id: g.gid,
+            dropset_weights: ex.drops ? ex.drops.filter(d=>d).join(',') : '',
+          });
+        });
+      });
+      output['{{ num }}'] = {notes: dayData[{{ num }}].notes, exercises: exList};
+    }
+    {% endfor %}
+
+    if (!Object.keys(output).length) {
+      alert('حداقل یک حرکت برای یک روز انتخاب کنید.');
+      return;
+    }
+
+    document.getElementById('daysDataInput').value = JSON.stringify(output);
+
+    // بازخورد فوری به کاربر که کلیک ثبت شده و درخواست در حال ارسال است —
+    // مخصوصاً برای برنامه‌های بزرگ‌تر (سوپرست/تری‌ست/دراپ‌ست کنار حرکات معمولی)
+    // که حجم داده و زمان ذخیره روی سرور بیشتره و بدون این پیام، به نظر می‌رسید
+    // «هیچ اتفاقی نمی‌افته».
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+      btn.style.cursor = 'default';
+    }
+    if (btnLabel) btnLabel.textContent = 'در حال ذخیره...';
+
+    document.getElementById('programForm').submit();
+
+    // اگر به هر دلیلی (مثلاً خطای شبکه) صفحه عوض نشد، دکمه رو بعد از چند
+    // ثانیه دوباره فعال کن تا کاربر بتونه دوباره تلاش کنه.
+    setTimeout(() => {
+      if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = ''; }
+      if (btnLabel) btnLabel.textContent = 'ذخیره برنامه';
+    }, 15000);
+
+  } catch (err) {
+    console.error('خطا در ذخیره برنامه:', err);
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = ''; }
+    if (btnLabel) btnLabel.textContent = 'ذخیره برنامه';
+    alert('ذخیره برنامه با خطا مواجه شد. لطفاً دوباره تلاش کنید.');
+  }
+}
+
+function showPickToast(name) {
+  let toast = document.getElementById('pickToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'pickToast';
+    toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);'
+      + 'background:var(--success);color:white;padding:0.6rem 1.2rem;border-radius:30px;'
+      + 'font-size:0.85rem;font-weight:600;z-index:3000;box-shadow:0 8px 24px rgba(0,0,0,0.3);'
+      + 'opacity:0;transition:opacity 0.25s';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = '<i class="fas fa-check"></i> ' + name + ' اضافه شد';
+  toast.style.opacity = '1';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.style.opacity = '0', 1200);
+}
+
+// ── Notes Popup ──────────────────────────────────────────────
+let _noteCtx = null;
+
+function openNotesPopup(day, gid, uid, btn) {
+  const ex = dayData[day].groups.find(g=>g.gid===gid)?.exercises.find(e=>e.uid===uid);
+  if (!ex) return;
+  _noteCtx = {day, gid, uid, btn};
+  document.getElementById('notesInput').value = ex.notes || '';
+  const modal = document.getElementById('notesModal');
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('notesInput').focus(), 100);
+}
+
+function closeNotesPopup() {
+  document.getElementById('notesModal').style.display = 'none';
+  _noteCtx = null;
+}
+
+function saveNotes() {
+  if (!_noteCtx) return;
+  const {day, gid, uid, btn} = _noteCtx;
+  const val = document.getElementById('notesInput').value.trim();
+  updEx(day, gid, uid, 'notes', val);
+  btn.dataset.notes = val;
+  btn.innerHTML = `<i class="fas fa-comment-alt"></i> ${val ? 'ویرایش یادداشت' : 'یادداشت'}`;
+  closeNotesPopup();
+}
+
+
+// ── حالت ادیت: پر کردن خودکار روزها ─────────────────────────
+{% if edit_mode and existing_days_json %}
+(function(){
+  const existing = {{ existing_days_json|safe }};
+
+  for (const [dayNum, dayInfo] of Object.entries(existing)) {
+    const num = parseInt(dayNum);
+
+    // یادداشت روز
+    const noteEl = document.getElementById('note-' + num);
+    if (noteEl && dayInfo.notes) noteEl.value = dayInfo.notes;
+
+    const exList = dayInfo.exercises || [];
+
+    // گروه‌بندی حرکات بر اساس group_id + set_type
+    // حرکاتی که group_id یکسانی دارن = یک گروه superset/triset/dropset
+    const groupMap = {};  // group_id -> [exercises]
+    const orderedGroups = [];  // برای حفظ ترتیب
+
+    for (const ex of exList) {
+      const gid = ex.group_id || ('solo_' + ex.uid);
+      if (!groupMap[gid]) {
+        groupMap[gid] = [];
+        orderedGroups.push(gid);
+      }
+      groupMap[gid].push(ex);
+    }
+
+    // ساخت dayData از گروه‌ها
+    dayData[num].groups = [];
+
+    for (const gid of orderedGroups) {
+      const members = groupMap[gid];
+      const stype = members[0].set_type || 'normal';
+      const newGid = ++groupIdCounter;
+
+      const exercises = members.map(ex => ({
+        uid:          ++exIdCounter,
+        exercise_id:  ex.exercise_id,
+        name:         ex.name,
+        category:     ex.category,
+        sets:         ex.sets,
+        reps:         String(ex.reps),
+        rest:         ex.rest,
+        notes:        ex.notes || '',
+        drops:        stype === 'dropset' ? (ex.dropset_weights ? ex.dropset_weights.split(',') : ['','','']) : [],
+        dropset_weights: ex.dropset_weights || '',
+      }));
+
+      dayData[num].groups.push({ gid: newGid, type: stype, exercises });
+    }
+
+    renderDay(num);
+    updateDayCount(num);
+  }
+})();
+{% endif %}
+</script>
+{% endblock %}

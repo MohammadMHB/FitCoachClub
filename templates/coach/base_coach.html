@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block sidebar_nav %}
+<span class="nav-section">اصلی</span>
+<a href="{% url 'coach:dashboard' %}" class="nav-item">
+  <i class="fas fa-home"></i> داشبورد
+</a>
+
+<span class="nav-section">شاگردان</span>
+<a href="{% url 'coach:trainee_list' %}" class="nav-item">
+  <i class="fas fa-users"></i> لیست شاگردان
+</a>
+<a href="{% url 'coach:trainee_add' %}" class="nav-item">
+  <i class="fas fa-user-plus"></i> افزودن شاگرد
+</a>
+
+<span class="nav-section">تمرین</span>
+<a href="{% url 'coach:exercise_list' %}" class="nav-item">
+  <i class="fas fa-running"></i> بانک حرکات
+</a>
+
+
+<span class="nav-section">سیستم</span>
+<a href="{% url 'coach:notifications' %}" class="nav-item">
+  <i class="fas fa-bell"></i> اعلان‌ها
+  {% if unread_count %}<span class="nav-badge">{{ unread_count }}</span>{% endif %}
+</a>
+<a href="{% url 'accounts:change_password' %}" class="nav-item">
+  <i class="fas fa-key"></i> تغییر رمز
+</a>
+{% endblock %}
+
+{% block bottom_nav %}
+<a href="{% url 'coach:dashboard' %}" class="bottom-nav-item">
+  <i class="fas fa-home"></i><span>خانه</span>
+</a>
+<a href="{% url 'coach:trainee_list' %}" class="bottom-nav-item">
+  <i class="fas fa-users"></i><span>شاگردان</span>
+</a>
+<a href="{% url 'coach:exercise_list' %}" class="bottom-nav-item">
+  <i class="fas fa-dumbbell"></i><span>حرکات</span>
+</a>
+<a href="{% url 'accounts:logout' %}" class="bottom-nav-item">
+  <i class="fas fa-sign-out-alt"></i><span>خروج</span>
+</a>
+{% endblock %}

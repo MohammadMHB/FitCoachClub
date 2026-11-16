@@ -1,0 +1,226 @@
+{% extends "coach/base_coach.html" %}
+{% block title %}بانک حرکات - FitCoach{% endblock %}
+{% block page_title %}بانک حرکات{% endblock %}
+
+{% block extra_css %}
+<style>
+.exercise-card { cursor:default; }
+.exercise-thumb { position:relative;overflow:hidden;height:120px; }
+.exercise-thumb img { transition:transform 0.3s;width:100%;height:100%;object-fit:cover; }
+.exercise-thumb:hover img { transform:scale(1.08); }
+.exercise-thumb-btn {
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.45);opacity:0;transition:opacity 0.2s;cursor:zoom-in;
+}
+.exercise-thumb:hover .exercise-thumb-btn { opacity:1; }
+.exercise-no-img {
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  background:rgba(108,99,255,0.08);color:var(--text-muted);font-size:2.5rem;
+}
+.cat-filter-wrap { position:relative; }
+.cat-menu {
+  display:none;position:absolute;top:calc(100% + 6px);right:0;
+  background:var(--bg-secondary);border:1px solid var(--glass-border);border-radius:var(--radius-sm);
+  box-shadow:0 12px 30px rgba(0,0,0,0.5);z-index:50;min-width:200px;
+  max-height:320px;overflow-y:auto;padding:0.4rem;
+}
+.cat-filter-wrap.open .cat-menu { display:block; }
+.cat-menu-item {
+  display:block;padding:0.55rem 0.75rem;border-radius:8px;font-size:0.85rem;
+  color:var(--text-secondary);text-decoration:none;transition:background 0.15s;
+}
+.cat-menu-item:hover { background:var(--accent-glow); }
+.cat-menu-item.active { background:var(--accent-glow);color:var(--accent-light);font-weight:700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-dumbbell text-accent"></i> بانک حرکات</h2>
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+    <div class="cat-filter-wrap" id="catFilterWrap">
+      <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('catFilterWrap').classList.toggle('open')">
+        <i class="fas fa-filter"></i> {{ category_filter_label|default:"همه دسته‌ها" }}
+        <i class="fas fa-chevron-down" style="font-size:0.65rem"></i>
+      </button>
+      <div class="cat-menu">
+        <a href="{% url 'coach:exercise_list' %}" class="cat-menu-item {% if not category_filter %}active{% endif %}">همه</a>
+        {% for val, label in cats %}
+        <a href="?category={{ val }}" class="cat-menu-item {% if category_filter == val %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    <a href="{% url 'coach:exercise_add' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> حرکت جدید</a>
+  </div>
+</div>
+
+<!-- Public Exercises (اول) -->
+{% if public_exercises %}
+<h3 style="font-size:0.9rem;font-weight:700;margin-bottom:1rem;color:var(--text-muted)">
+  <i class="fas fa-globe"></i> حرکات عمومی و اختصاصی ({{ public_exercises.count }})
+</h3>
+<div class="exercise-grid" style="margin-bottom:2rem">
+  {% for ex in public_exercises %}
+  <div class="exercise-card">
+    <div class="exercise-thumb" onclick="zoomImg('{% if ex.image %}{{ ex.image.url }}{% endif %}','{{ ex.name }}')">
+      {% if ex.image %}
+        <img src="{{ ex.image.url }}" alt="{{ ex.name }}">
+        <div class="exercise-thumb-btn"><i class="fas fa-search-plus" style="color:white;font-size:1.5rem"></i></div>
+      {% else %}
+        <div class="exercise-no-img"><i class="fas fa-dumbbell"></i></div>
+      {% endif %}
+    </div>
+    <div class="exercise-info">
+      <div class="exercise-name">{{ ex.name }}</div>
+      <div class="exercise-cat">
+        <span class="badge badge-info" style="font-size:0.7rem">{{ ex.get_category_display }}</span>
+        {% if ex.is_public %}
+        <span class="badge badge-purple" style="font-size:0.7rem;margin-right:0.3rem">عمومی</span>
+        {% else %}
+        <span class="badge badge-warning" style="font-size:0.7rem;margin-right:0.3rem"><i class="fas fa-star"></i> اختصاصی شما</span>
+        {% endif %}
+      </div>
+      {% if ex.video_url or ex.video %}
+      <div class="exercise-actions">
+        <button type="button" class="btn btn-sm btn-outline" style="width:100%"
+                onclick="playVideo('{{ ex.video_url|default:ex.video.url|default:'' }}','{{ ex.name }}')">
+          <i class="fas fa-play"></i> پخش ویدیو
+        </button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="pagination-bar">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}{% if category_filter %}&category={{ category_filter }}{% endif %}" class="btn btn-sm btn-outline">
+    <i class="fas fa-chevron-right"></i> قبلی
+  </a>
+  {% endif %}
+  <span style="font-size:0.8rem;color:var(--text-muted)">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}{% if category_filter %}&category={{ category_filter }}{% endif %}" class="btn btn-sm btn-outline">
+    بعدی <i class="fas fa-chevron-left"></i>
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+{% endif %}
+
+<!-- My Exercises (حرکات شخصی مربی) -->
+<h3 style="font-size:0.9rem;font-weight:700;margin-bottom:1rem;color:var(--text-muted)">
+  <i class="fas fa-user"></i> حرکات من ({{ exercises.count }})
+</h3>
+<div class="exercise-grid" style="margin-bottom:2rem">
+  {% for ex in exercises %}
+  <div class="exercise-card">
+    <div class="exercise-thumb" onclick="zoomImg('{% if ex.image %}{{ ex.image.url }}{% endif %}','{{ ex.name }}')">
+      {% if ex.image %}
+        <img src="{{ ex.image.url }}" alt="{{ ex.name }}">
+        <div class="exercise-thumb-btn"><i class="fas fa-search-plus" style="color:white;font-size:1.5rem"></i></div>
+      {% else %}
+        <div class="exercise-no-img"><i class="fas fa-dumbbell"></i></div>
+      {% endif %}
+    </div>
+    <div class="exercise-info">
+      <div class="exercise-name">{{ ex.name }}</div>
+      <div class="exercise-cat"><span class="badge badge-info" style="font-size:0.7rem">{{ ex.get_category_display }}</span></div>
+      {% if ex.video_url or ex.video %}
+      <div class="exercise-actions">
+        <button type="button" class="btn btn-sm btn-outline" style="width:100%"
+                onclick="playVideo('{{ ex.video_url|default:ex.video.url|default:'' }}','{{ ex.name }}')">
+          <i class="fas fa-play"></i> پخش ویدیو
+        </button>
+      </div>
+      {% endif %}
+      <div class="exercise-actions">
+        <a href="{% url 'coach:exercise_edit' ex.pk %}" class="btn btn-sm btn-outline btn-icon"><i class="fas fa-edit"></i></a>
+        <form method="POST" action="{% url 'coach:exercise_delete' ex.pk %}" id="delex-{{ ex.pk }}" style="display:inline">
+          {% csrf_token %}
+          <button type="button" class="btn btn-sm btn-danger btn-icon"
+                  onclick="confirmDelete('delex-{{ ex.pk }}','حذف حرکت {{ ex.name }}؟')">
+            <i class="fas fa-trash"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div style="grid-column:1/-1">
+    <div class="empty-state"><i class="fas fa-dumbbell"></i><p>هنوز حرکت شخصی اضافه نکرده‌ای</p></div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <i class="fas fa-exclamation-triangle" style="font-size:2rem;color:var(--danger);margin-bottom:1rem"></i>
+    <h3>تأیید حذف</h3><p id="confirmMessage"></p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="confirmBtn">حذف</button>
+      <button class="btn btn-outline" onclick="closeModal('confirmModal')">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image Zoom Modal -->
+<div class="modal-overlay" id="imgModal" onclick="closeModal('imgModal')">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;max-width:92vw">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+      <h3 id="imgModalTitle" style="color:white;font-size:1rem"></h3>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('imgModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <img id="imgModalSrc" style="max-width:100%;max-height:80vh;border-radius:var(--radius);box-shadow:0 20px 60px rgba(0,0,0,0.8)">
+  </div>
+</div>
+
+<!-- Video Modal -->
+<div class="modal-overlay" id="videoModal">
+  <div class="modal-box" style="max-width:600px;width:95%">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <h3 id="videoTitle" style="font-size:1rem"></h3>
+      <button class="btn btn-outline btn-sm btn-icon" onclick="closeModal('videoModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="videoContent"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('catFilterWrap');
+  if (wrap && !wrap.contains(e.target)) wrap.classList.remove('open');
+});
+
+function zoomImg(url, title) {
+  if (!url) return;
+  document.getElementById('imgModalSrc').src = url;
+  document.getElementById('imgModalTitle').textContent = title || '';
+  document.getElementById('imgModal').classList.add('active');
+}
+
+function playVideo(url, title) {
+  if (!url) return;
+  document.getElementById('videoTitle').textContent = title;
+  const content = document.getElementById('videoContent');
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
+  content.innerHTML = yt
+    ? `<div class="video-wrapper"><iframe src="https://www.youtube.com/embed/${yt[1]}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>`
+    : `<video controls autoplay style="width:100%;border-radius:8px"><source src="${url}"></video>`;
+  document.getElementById('videoModal').classList.add('active');
+}
+
+const _origCloseModal = window.closeModal;
+window.closeModal = function(id) {
+  if (id === 'videoModal') {
+    document.getElementById('videoContent').innerHTML = '';
+  }
+  if (_origCloseModal) _origCloseModal(id);
+  else document.getElementById(id)?.classList.remove('active');
+};
+</script>
+{% endblock %}

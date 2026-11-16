@@ -1,0 +1,80 @@
+{% extends "coach/base_coach.html" %}
+{% block title %}کپی برنامه تمرینی - FitCoach{% endblock %}
+{% block page_title %}کپی برنامه برای شاگرد دیگر{% endblock %}
+
+{% block extra_css %}
+<style>
+.trainee-pick-list { max-height: 55vh; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; }
+.trainee-pick-item {
+  display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
+  border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.2s; background: var(--bg-card);
+}
+.trainee-pick-item:hover { border-color: var(--accent); background: var(--accent-glow); }
+.trainee-pick-item.selected { border-color: var(--accent); background: var(--accent-glow); }
+.trainee-pick-item input { accent-color: var(--accent); width: 18px; height: 18px; }
+.trainee-pick-name { font-weight: 600; font-size: 0.88rem; }
+.trainee-pick-meta { font-size: 0.74rem; color: var(--text-muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2><i class="fas fa-copy text-accent"></i> کپی برنامه برای شاگرد دیگر</h2>
+    <p class="text-muted" style="font-size:0.82rem;margin-top:0.2rem">
+      برنامه‌ی «<strong>{{ program.title }}</strong>» با تمام روزها و حرکاتش برای شاگرد انتخابی کپی می‌شود.
+    </p>
+  </div>
+  <a href="{% url 'coach:program_view' program.pk %}" class="btn btn-outline">
+    <i class="fas fa-arrow-right"></i> بازگشت
+  </a>
+</div>
+
+{% if trainees %}
+<form method="POST" class="card" style="padding:1.25rem">
+  {% csrf_token %}
+  <div class="form-group">
+    <input type="text" class="form-control" id="traineeSearch" placeholder="جستجوی نام شاگرد..." oninput="filterTraineePick()">
+  </div>
+  <div class="trainee-pick-list" id="traineePickList">
+    {% for t in trainees %}
+    <label class="trainee-pick-item" data-name="{{ t.user.get_full_name|default:t.user.username|lower }}">
+      <input type="radio" name="target_trainee" value="{{ t.pk }}" required onchange="markSelected(this)">
+      <div>
+        <div class="trainee-pick-name">{{ t.user.get_full_name|default:t.user.username }}</div>
+        <div class="trainee-pick-meta">
+          {% if t.active_program_obj %}
+            <span style="color:var(--warning)"><i class="fas fa-exclamation-triangle"></i> برنامه‌ی فعلی این شاگرد جایگزین می‌شود</span>
+          {% else %}
+            بدون برنامه‌ی فعال
+          {% endif %}
+        </div>
+      </div>
+    </label>
+    {% endfor %}
+  </div>
+  <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--glass-border)">
+    <a href="{% url 'coach:program_view' program.pk %}" class="btn btn-outline">انصراف</a>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-copy"></i> کپی کن</button>
+  </div>
+</form>
+{% else %}
+<div class="card"><div class="empty-state"><i class="fas fa-users"></i><p>شاگرد دیگری برای کپی کردن وجود ندارد</p></div></div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markSelected(input) {
+  document.querySelectorAll('.trainee-pick-item').forEach(el => el.classList.remove('selected'));
+  input.closest('.trainee-pick-item').classList.add('selected');
+}
+function filterTraineePick() {
+  const q = document.getElementById('traineeSearch').value.trim().toLowerCase();
+  document.querySelectorAll('.trainee-pick-item').forEach(el => {
+    el.style.display = el.dataset.name.includes(q) ? 'flex' : 'none';
+  });
+}
+</script>
+{% endblock %}

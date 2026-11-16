@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block sidebar_nav %}
+<span class="nav-section">اصلی</span>
+<a href="{% url 'trainee:dashboard' %}" class="nav-item">
+  <i class="fas fa-home"></i> داشبورد
+</a>
+
+<span class="nav-section">تمرین</span>
+<a href="{% url 'trainee:my_program' %}" class="nav-item">
+  <i class="fas fa-clipboard-list"></i> برنامه تمرینی
+</a>
+<a href="{% url 'trainee:past_programs' %}" class="nav-item">
+  <i class="fas fa-history"></i> برنامه‌های قبلی
+</a>
+
+{% if nutrition_enabled %}
+<span class="nav-section">تغذیه</span>
+<a href="{% url 'trainee:my_diet' %}" class="nav-item">
+  <i class="fas fa-utensils"></i> رژیم غذایی
+</a>
+<a href="{% url 'trainee:past_diets' %}" class="nav-item">
+  <i class="fas fa-history"></i> رژیم‌های قبلی
+</a>
+{% endif %}
+
+<span class="nav-section">پروفایل</span>
+<a href="{% url 'trainee:profile' %}" class="nav-item">
+  <i class="fas fa-user"></i> پروفایل من
+</a>
+<a href="{% url 'trainee:update_metrics' %}" class="nav-item">
+  <i class="fas fa-chart-line"></i> به‌روزرسانی اندازه‌ها
+</a>
+
+<span class="nav-section">سیستم</span>
+<a href="{% url 'trainee:notifications' %}" class="nav-item">
+  <i class="fas fa-bell"></i> اعلان‌ها
+  {% if unread_count %}<span class="nav-badge">{{ unread_count }}</span>{% endif %}
+</a>
+<a href="{% url 'accounts:change_password' %}" class="nav-item">
+  <i class="fas fa-key"></i> تغییر رمز
+</a>
+{% endblock %}
+
+{% block bottom_nav %}
+<a href="{% url 'trainee:dashboard' %}" class="bottom-nav-item">
+  <i class="fas fa-home"></i><span>خانه</span>
+</a>
+<a href="{% url 'trainee:my_program' %}" class="bottom-nav-item">
+  <i class="fas fa-dumbbell"></i><span>برنامه</span>
+</a>
+{% if nutrition_enabled %}
+<a href="{% url 'trainee:my_diet' %}" class="bottom-nav-item">
+  <i class="fas fa-utensils"></i><span>رژیم</span>
+</a>
+{% endif %}
+<a href="{% url 'trainee:profile' %}" class="bottom-nav-item">
+  <i class="fas fa-user"></i><span>پروفایل</span>
+</a>
+<a href="{% url 'trainee:notifications' %}" class="bottom-nav-item">
+  <i class="fas fa-bell"></i><span>اعلان</span>
+  {% if unread_count %}<span class="bottom-nav-badge">{{ unread_count }}</span>{% endif %}
+</a>
+{% endblock %}

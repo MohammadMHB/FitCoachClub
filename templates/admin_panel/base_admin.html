@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block sidebar_nav %}
+<span class="nav-section">اصلی</span>
+<a href="{% url 'admin_panel:dashboard' %}" class="nav-item">
+  <i class="fas fa-tachometer-alt"></i> داشبورد
+</a>
+<span class="nav-section">مدیریت</span>
+<a href="{% url 'admin_panel:coach_list' %}" class="nav-item">
+  <i class="fas fa-user-tie"></i> مربیان
+</a>
+<a href="{% url 'admin_panel:trainee_list' %}" class="nav-item">
+  <i class="fas fa-users"></i> شاگردان
+</a>
+<a href="{% url 'admin_panel:exercise_list' %}" class="nav-item">
+  <i class="fas fa-dumbbell"></i> حرکات عمومی
+</a>
+{% if nutrition_enabled %}
+<a href="{% url 'admin_panel:food_list' %}" class="nav-item">
+  <i class="fas fa-carrot"></i> بانک غذایی
+</a>
+{% endif %}
+<span class="nav-section">سیستم</span>
+<a href="{% url 'admin_panel:activity_log' %}" class="nav-item">
+  <i class="fas fa-clock-rotate-left"></i> گزارش فعالیت‌ها
+</a>
+<a href="{% url 'accounts:change_password' %}" class="nav-item">
+  <i class="fas fa-key"></i> تغییر رمز
+</a>
+{% endblock %}
+
+{% block bottom_nav %}
+<a href="{% url 'admin_panel:dashboard' %}" class="bottom-nav-item">
+  <i class="fas fa-home"></i><span>خانه</span>
+</a>
+<a href="{% url 'admin_panel:coach_list' %}" class="bottom-nav-item">
+  <i class="fas fa-user-tie"></i><span>مربیان</span>
+</a>
+<a href="{% url 'admin_panel:trainee_list' %}" class="bottom-nav-item">
+  <i class="fas fa-users"></i><span>شاگردان</span>
+</a>
+{% if nutrition_enabled %}
+<a href="{% url 'admin_panel:food_list' %}" class="bottom-nav-item">
+  <i class="fas fa-carrot"></i><span>غذاها</span>
+</a>
+{% endif %}
+<a href="{% url 'accounts:logout' %}" class="bottom-nav-item">
+  <i class="fas fa-sign-out-alt"></i><span>خروج</span>
+</a>
+{% endblock %}

@@ -1,0 +1,31 @@
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-icon"><i class="fas fa-dumbbell"></i></span>
+    <span class="logo-text">FitCoach</span>
+  </div>
+  <nav class="sidebar-nav">
+    <span class="nav-section">اصلی</span>
+    <a href="{% url 'trainee:dashboard' %}" class="nav-item"><i class="fas fa-home"></i> داشبورد</a>
+    <span class="nav-section">تمرین</span>
+    <a href="{% url 'trainee:my_program' %}" class="nav-item"><i class="fas fa-clipboard-list"></i> برنامه تمرینی</a>
+    <a href="{% url 'trainee:past_programs' %}" class="nav-item"><i class="fas fa-history"></i> برنامه‌های قبلی</a>
+    {% if nutrition_enabled %}
+    <span class="nav-section">تغذیه</span>
+    <a href="{% url 'trainee:my_diet' %}" class="nav-item"><i class="fas fa-utensils"></i> رژیم غذایی</a>
+    <a href="{% url 'trainee:past_diets' %}" class="nav-item"><i class="fas fa-history"></i> رژیم‌های قبلی</a>
+    {% endif %}
+    <span class="nav-section">پروفایل</span>
+    <a href="{% url 'trainee:profile' %}" class="nav-item"><i class="fas fa-user"></i> پروفایل من</a>
+    <span class="nav-section">سیستم</span>
+    <a href="{% url 'trainee:notifications' %}" class="nav-item"><i class="fas fa-bell"></i> اعلان‌ها</a>
+    <a href="{% url 'accounts:change_password' %}" class="nav-item active"><i class="fas fa-key"></i> تغییر رمز</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-avatar">{{ user.first_name|slice:":1"|default:user.username|slice:":1" }}</div>
+    <div class="user-meta">
+      <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+      <span class="user-role">شاگرد</span>
+    </div>
+    <a href="{% url 'accounts:logout' %}" class="logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+  </div>
+</aside>

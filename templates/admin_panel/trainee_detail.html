@@ -1,0 +1,408 @@
+{% extends "admin_panel/base_admin.html" %}
+{% block title %}مشخصات شاگرد - FitCoach{% endblock %}
+{% block page_title %}مشخصات شاگرد{% endblock %}
+
+{% block extra_css %}
+<style>
+.group-wrap { margin-bottom:0.75rem; }
+.group-wrap.superset { border-right:4px solid #f39c12;border-radius:var(--radius-sm);overflow:hidden; }
+.group-wrap.triset   { border-right:4px solid #3498db;border-radius:var(--radius-sm);overflow:hidden; }
+.group-wrap.dropset  { border-right:4px solid #e74c3c;border-radius:var(--radius-sm);overflow:hidden; }
+.group-label { padding:0.4rem 1rem;font-size:0.75rem;font-weight:700; }
+.superset .group-label { background:rgba(243,156,18,0.1);color:#f39c12; }
+.triset   .group-label { background:rgba(52,152,219,0.1);color:#3498db; }
+.dropset  .group-label { background:rgba(231,76,60,0.1);color:#e74c3c; }
+.meal-item { display:flex;gap:0.75rem;align-items:flex-start;padding:0.75rem;border-bottom:1px solid var(--glass-border); }
+.meal-item:last-child { border-bottom:none; }
+.meal-icon {
+  width:34px;height:34px;border-radius:8px;flex-shrink:0;
+  background:var(--accent-glow);color:var(--accent-light);
+  display:flex;align-items:center;justify-content:center;
+}
+.meal-content-text { font-size:0.85rem;line-height:1.9;white-space:pre-wrap; }
+.archive-item-header {
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;
+  padding:0.75rem;background:var(--bg-card);border:1px solid var(--glass-border);
+  border-radius:var(--radius-sm);cursor:pointer;
+}
+.archive-item-body { display:none;padding:0.75rem 0.25rem; }
+/* روزهای برنامه به‌صورت پیش‌فرض بسته‌اند؛ با کلیک باز می‌شوند */
+.program-day-body { display:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2><i class="fas fa-user text-accent"></i> {{ profile.user.get_full_name|default:profile.user.username }}</h2>
+    <p class="text-muted" style="font-size:0.82rem;margin-top:0.2rem">@{{ profile.user.username }}</p>
+  </div>
+  <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+    <a href="{% url 'admin_panel:trainee_edit' profile.pk %}" class="btn btn-outline btn-sm">
+      <i class="fas fa-edit"></i> ویرایش
+    </a>
+    <button type="button" class="btn btn-success btn-sm"
+            onclick="copyInviteMessageFor('{{ profile.user.get_full_name|default:profile.user.username|escapejs }}','{{ profile.user.username|escapejs }}','{{ profile.last_password_plain|default:''|escapejs }}')">
+      <i class="fas fa-paper-plane"></i> ارسال به شاگرد
+    </button>
+    <a href="{% url 'admin_panel:trainee_list' %}" class="btn btn-outline btn-sm">
+      <i class="fas fa-arrow-right"></i> بازگشت
+    </a>
+    <form method="POST" action="{% url 'admin_panel:trainee_delete' profile.pk %}" id="del-admin-detail-{{ profile.pk }}" style="display:inline">
+      {% csrf_token %}
+      <button type="button" class="btn btn-danger btn-sm" title="حذف"
+              onclick="confirmDelete('del-admin-detail-{{ profile.pk }}','آیا از حذف {{ profile.user.get_full_name }} مطمئنید؟')">
+        <i class="fas fa-trash"></i> حذف
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <i class="fas fa-exclamation-triangle" style="font-size:2rem;color:var(--danger);margin-bottom:1rem"></i>
+    <h3>تأیید حذف</h3>
+    <p id="confirmMessage"></p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="confirmBtn">حذف</button>
+      <button class="btn btn-outline" onclick="closeModal('confirmModal')">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<!-- اطلاعات شخصی -->
+<div class="card profile-info-card">
+  <div class="profile-info-header">
+    <div class="profile-info-avatar">{{ profile.user.first_name|slice:":1"|default:"?" }}</div>
+    <div>
+      <div class="profile-info-name">{{ profile.user.get_full_name|default:"-" }}</div>
+      <div class="profile-info-username">@{{ profile.user.username }}</div>
+    </div>
+    <span class="profile-info-status badge {% if profile.user.is_active %}badge-success{% else %}badge-danger{% endif %}">
+      {% if profile.user.is_active %}فعال{% else %}غیرفعال{% endif %}
+    </span>
+  </div>
+  <div class="profile-info-grid">
+    <div class="profile-info-field">
+      <div class="pf-label"><i class="fas fa-phone"></i> تلفن</div>
+      <div class="pf-value" dir="ltr">{{ profile.user.phone|default:"-" }}</div>
+    </div>
+    <div class="profile-info-field">
+      <div class="pf-label"><i class="fas fa-weight"></i> وزن</div>
+      <div class="pf-value" dir="ltr">{% if profile.weight %}{{ profile.weight }} kg{% else %}-{% endif %}</div>
+    </div>
+    <div class="profile-info-field">
+      <div class="pf-label"><i class="fas fa-ruler-vertical"></i> قد</div>
+      <div class="pf-value" dir="ltr">{% if profile.height %}{{ profile.height }} cm{% else %}-{% endif %}</div>
+    </div>
+    <div class="profile-info-field">
+      <div class="pf-label"><i class="fas fa-birthday-cake"></i> سن</div>
+      <div class="pf-value" dir="ltr">{% if profile.age %}{{ profile.age }} سال{% else %}-{% endif %}</div>
+    </div>
+  </div>
+  <div class="profile-info-grid" style="margin-top:0.75rem">
+    <div class="profile-info-field">
+      <div class="pf-label"><i class="fas fa-user-tie"></i> مربی</div>
+      <div class="pf-value">{{ profile.coach.get_full_name|default:"بدون مربی" }}</div>
+    </div>
+    <div class="profile-info-field">
+      <div class="pf-label"><i class="fas fa-calendar-plus"></i> تاریخ عضویت</div>
+      <div class="pf-value" dir="ltr">{{ profile.user.date_joined|date:"Y/m/d" }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- BMI -->
+{% if profile.bmi %}
+<div class="bmi-mini-box">
+  <div class="bmi-mini-head">
+    <span><i class="fas fa-heartbeat"></i> شاخص BMI</span>
+    <span class="badge badge-{% if profile.bmi_status == 'normal' %}success{% elif profile.bmi_status == 'underweight' %}info{% elif profile.bmi_status == 'overweight' %}warning{% else %}danger{% endif %}" style="font-size:0.68rem">
+      {{ profile.get_bmi_status_display }}
+    </span>
+  </div>
+  <div class="bmi-mini-number-row">
+    <span class="bmi-mini-number"
+      style="color:{% if profile.bmi_status == 'normal' %}var(--success){% elif profile.bmi_status == 'underweight' %}var(--info){% elif profile.bmi_status == 'overweight' %}var(--warning){% else %}var(--danger){% endif %}">
+      {{ profile.bmi }}
+    </span>
+  </div>
+  <div class="bmi-mini-gauge">
+    {% if profile.bmi_status == 'underweight' %}
+      <div style="height:100%;width:20%;background:var(--info)"></div>
+    {% elif profile.bmi_status == 'normal' %}
+      <div style="height:100%;width:45%;background:var(--success)"></div>
+    {% elif profile.bmi_status == 'overweight' %}
+      <div style="height:100%;width:65%;background:var(--warning)"></div>
+    {% else %}
+      <div style="height:100%;width:85%;background:var(--danger)"></div>
+    {% endif %}
+  </div>
+  {% if profile.weight_diff %}
+    {% if profile.weight_diff > 0 %}
+    <div class="bmi-mini-diff" style="color:var(--warning)"><i class="fas fa-arrow-up"></i> {{ profile.weight_diff_abs }} کیلو اضافه‌وزن</div>
+    {% else %}
+    <div class="bmi-mini-diff" style="color:var(--info)"><i class="fas fa-arrow-down"></i> {{ profile.weight_diff_abs }} کیلو کمبود وزن</div>
+    {% endif %}
+  {% else %}
+    <div class="bmi-mini-diff" style="color:var(--success)"><i class="fas fa-check-circle"></i> وزن در محدوده‌ی سالم</div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- برنامه‌ی تمرینی فعال -->
+<div class="card" style="margin-top:1.5rem">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-clipboard-check text-accent"></i> برنامه‌ی تمرینی فعال</span>
+  </div>
+  {% if active_program %}
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem">
+    <div>
+      <div style="font-weight:700;font-size:1rem">{{ active_program.title }}</div>
+      <div style="font-size:0.8rem;color:var(--text-muted)">مربی: {{ active_program.coach.get_full_name|default:active_program.coach.username }} — {{ active_program.created_at|date:"Y/m/d" }}</div>
+    </div>
+    {% if active_program.is_expired %}
+    <span class="badge badge-danger"><i class="fas fa-hourglass-end"></i> منقضی شده</span>
+    {% else %}
+    <span class="badge {% if active_program.needs_renewal_soon %}badge-warning{% else %}badge-purple{% endif %}"><i class="fas fa-hourglass-half"></i> {{ active_program.days_remaining }} روز مانده</span>
+    {% endif %}
+  </div>
+
+  {% for day in active_program.days.all %}
+  <div class="program-day-card">
+    <div class="program-day-header" onclick="toggleDay('adp-{{ day.pk }}',this)">
+      <i class="fas fa-calendar-day text-accent"></i>
+      <h3>{{ day.get_day_number_display }}</h3>
+      <div style="margin-right:auto;display:flex;align-items:center;gap:0.75rem">
+        <span class="badge badge-purple">{{ day.exercises.count }} حرکت</span>
+        <i class="fas fa-chevron-down" style="transition:transform 0.3s;font-size:0.8rem"></i>
+      </div>
+    </div>
+    <div class="program-day-body" id="adp-{{ day.pk }}">
+      {% if day.notes %}<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.75rem"><i class="fas fa-sticky-note"></i> {{ day.notes }}</p>{% endif %}
+      {% regroup day.exercises.all by group_id as grouped_exercises %}
+      {% for grp in grouped_exercises %}
+      {% with first=grp.list.0 %}
+      <div class="group-wrap {{ first.set_type }}">
+        {% if first.set_type != 'normal' %}
+        <div class="group-label">
+          {% if first.set_type == 'superset' %}🔗 سوپرست{% elif first.set_type == 'triset' %}📚 تری‌ست{% elif first.set_type == 'dropset' %}🔽 دراپ‌ست{% endif %}
+        </div>
+        {% endif %}
+        {% for wex in grp.list %}
+        <div style="display:flex;align-items:center;gap:0.875rem;padding:0.75rem;border-bottom:1px solid var(--glass-border)">
+          <div class="exercise-thumb-sm" style="flex-shrink:0">
+            {% if wex.exercise.image %}<img src="{{ wex.exercise.image.url }}" alt="{{ wex.exercise.name }}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">
+            {% else %}<i class="fas fa-dumbbell"></i>{% endif %}
+          </div>
+          <div class="exercise-details" style="flex:1">
+            <h4 style="font-size:0.875rem;font-weight:600;margin-bottom:0.3rem">
+              {{ wex.exercise.name }}
+              <span style="font-size:0.7rem;color:var(--text-muted);font-weight:400">{{ wex.exercise.get_category_display }}</span>
+            </h4>
+            <div class="exercise-meta">
+              <span class="meta-chip"><i class="fas fa-layer-group"></i> {{ wex.sets }} ست</span>
+              <span class="meta-chip"><i class="fas fa-redo"></i> {{ wex.reps }} تکرار</span>
+              <span class="meta-chip"><i class="fas fa-clock"></i> {{ wex.rest_seconds }}s</span>
+              {% if wex.dropset_weights %}<span class="meta-chip" style="color:#e74c3c"><i class="fas fa-arrow-down"></i> {{ wex.dropset_weights }} kg</span>{% endif %}
+            </div>
+            {% if wex.notes %}<div style="font-size:0.78rem;color:var(--accent-light);margin-top:0.3rem"><i class="fas fa-comment"></i> {{ wex.notes }}</div>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endwith %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state"><i class="fas fa-clipboard"></i><p>هنوز برنامه‌ای تنظیم نشده</p></div>
+  {% endif %}
+</div>
+
+<!-- رژیم غذایی فعال -->
+{% if nutrition_enabled %}
+<div class="card" style="margin-top:1.5rem">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-utensils text-accent"></i> رژیم غذایی فعال</span>
+  </div>
+  {% if active_diet %}
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem">
+    <div>
+      <div style="font-weight:700;font-size:1rem">{{ active_diet.title }}</div>
+      <div style="font-size:0.8rem;color:var(--text-muted)">مربی: {{ active_diet.coach.get_full_name|default:active_diet.coach.username }} — {{ active_diet.created_at|date:"Y/m/d" }}</div>
+    </div>
+    {% if active_diet.is_expired %}
+    <span class="badge badge-danger"><i class="fas fa-hourglass-end"></i> منقضی شده</span>
+    {% else %}
+    <span class="badge {% if active_diet.needs_renewal_soon %}badge-warning{% else %}badge-purple{% endif %}"><i class="fas fa-hourglass-half"></i> {{ active_diet.days_remaining }} روز مانده</span>
+    {% endif %}
+  </div>
+
+  {% for day in active_diet.days.all %}
+  <div class="program-day-card">
+    <div class="program-day-header" onclick="toggleDay('add-{{ day.pk }}',this)">
+      <i class="fas fa-calendar-day text-accent"></i>
+      <h3>{{ day.get_day_number_display }}</h3>
+      <div style="margin-right:auto;display:flex;align-items:center;gap:0.75rem">
+        <span class="badge badge-purple">{{ day.meals.count }} وعده</span>
+        <i class="fas fa-chevron-down" style="transition:transform 0.3s;font-size:0.8rem"></i>
+      </div>
+    </div>
+    <div class="program-day-body" id="add-{{ day.pk }}">
+      {% if day.notes %}<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.75rem"><i class="fas fa-sticky-note"></i> {{ day.notes }}</p>{% endif %}
+      {% for meal in day.meals.all %}
+      <div class="meal-item">
+        <div class="meal-icon"><i class="fas fa-utensils"></i></div>
+        <div style="flex:1">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--accent-light);margin-bottom:0.2rem">{{ meal.get_meal_type_display }}</div>
+          <div class="meal-content-text">{{ meal.content }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state"><i class="fas fa-utensils"></i><p>هنوز رژیم غذایی تنظیم نشده</p></div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- آرشیو برنامه‌های قبلی -->
+{% if past_programs %}
+<div class="card" style="margin-top:1.5rem">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-history text-accent"></i> برنامه‌های قبلی ({{ past_programs|length }})</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:0.5rem">
+    {% for prog in past_programs %}
+    <div>
+      <div class="archive-item-header" onclick="toggleArchive('apr-{{ prog.pk }}',this)">
+        <div>
+          <div style="font-weight:600;font-size:0.875rem">{{ prog.title }}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted)">{{ prog.created_at|date:"Y/m/d" }} — مربی: {{ prog.coach.get_full_name|default:prog.coach.username }}</div>
+        </div>
+        <i class="fas fa-chevron-down" style="transition:transform 0.3s;font-size:0.8rem"></i>
+      </div>
+      <div class="archive-item-body" id="apr-{{ prog.pk }}">
+        {% for day in prog.days.all %}
+        <div style="margin-bottom:0.5rem;padding:0.5rem;background:var(--bg-card);border:1px solid var(--glass-border);border-radius:var(--radius-sm)">
+          <div style="font-weight:600;font-size:0.82rem;margin-bottom:0.4rem">{{ day.get_day_number_display }} <span class="badge badge-purple" style="margin-right:0.4rem">{{ day.exercises.count }} حرکت</span></div>
+          {% for wex in day.exercises.all %}
+          <div style="font-size:0.8rem;padding:0.3rem 0;border-bottom:1px solid var(--glass-border);display:flex;justify-content:space-between;gap:0.5rem">
+            <span>{{ wex.exercise.name }}</span>
+            <span style="color:var(--text-muted);white-space:nowrap">{{ wex.sets }}×{{ wex.reps }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% empty %}
+        <div class="empty-state" style="padding:0.75rem"><p>روزی ثبت نشده</p></div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- آرشیو رژیم‌های قبلی -->
+{% if nutrition_enabled and past_diets %}
+<div class="card" style="margin-top:1.5rem">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-history text-accent"></i> رژیم‌های قبلی ({{ past_diets|length }})</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:0.5rem">
+    {% for diet in past_diets %}
+    <div>
+      <div class="archive-item-header" onclick="toggleArchive('adt-{{ diet.pk }}',this)">
+        <div>
+          <div style="font-weight:600;font-size:0.875rem">{{ diet.title }}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted)">{{ diet.created_at|date:"Y/m/d" }} — مربی: {{ diet.coach.get_full_name|default:diet.coach.username }}</div>
+        </div>
+        <i class="fas fa-chevron-down" style="transition:transform 0.3s;font-size:0.8rem"></i>
+      </div>
+      <div class="archive-item-body" id="adt-{{ diet.pk }}">
+        {% for day in diet.days.all %}
+        <div style="margin-bottom:0.5rem;padding:0.5rem;background:var(--bg-card);border:1px solid var(--glass-border);border-radius:var(--radius-sm)">
+          <div style="font-weight:600;font-size:0.82rem;margin-bottom:0.4rem">{{ day.get_day_number_display }} <span class="badge badge-purple" style="margin-right:0.4rem">{{ day.meals.count }} وعده</span></div>
+          {% for meal in day.meals.all %}
+          <div style="font-size:0.8rem;padding:0.3rem 0;border-bottom:1px solid var(--glass-border)">
+            <strong style="color:var(--accent-light)">{{ meal.get_meal_type_display }}:</strong> {{ meal.content|truncatechars:80 }}
+          </div>
+          {% endfor %}
+        </div>
+        {% empty %}
+        <div class="empty-state" style="padding:0.75rem"><p>روزی ثبت نشده</p></div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDay(id,header) {
+  const b=document.getElementById(id);
+  const isOpen = b.classList.contains('open');
+  if (isOpen) { closeDayPanel(id); } else { openDayPanel(id); }
+}
+const _dayAutoCloseTimers = {};
+const DAY_AUTO_CLOSE_MS = 3 * 60 * 1000; // ۳ دقیقه
+function openDayPanel(id) {
+  const b = document.getElementById(id);
+  if (!b) return;
+  const header = b.previousElementSibling;
+  const icon = header ? header.querySelector('.fa-chevron-down') : null;
+  b.style.display = 'block';
+  b.classList.add('open');
+  if (icon) icon.style.transform = 'rotate(180deg)';
+  if (_dayAutoCloseTimers[id]) clearTimeout(_dayAutoCloseTimers[id]);
+  _dayAutoCloseTimers[id] = setTimeout(() => closeDayPanel(id), DAY_AUTO_CLOSE_MS);
+}
+function closeDayPanel(id) {
+  const b = document.getElementById(id);
+  if (!b) return;
+  const header = b.previousElementSibling;
+  const icon = header ? header.querySelector('.fa-chevron-down') : null;
+  b.style.display = 'none';
+  b.classList.remove('open');
+  if (icon) icon.style.transform = '';
+  if (_dayAutoCloseTimers[id]) { clearTimeout(_dayAutoCloseTimers[id]); delete _dayAutoCloseTimers[id]; }
+}
+function toggleArchive(id,header) {
+  const b=document.getElementById(id), i=header.querySelector('.fa-chevron-down');
+  const open = b.style.display==='block';
+  b.style.display = open ? 'none' : 'block';
+  if(i) i.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+function copyInviteMessageFor(fullName, username, password) {
+  const siteUrl = window.location.origin + "{% url 'accounts:login' %}";
+  let message = `سلام ${fullName} 👋
+برنامه‌ت تو فیت‌کوچ آماده‌ست!
+
+آدرس سایت: ${siteUrl}
+نام کاربری: ${username}`;
+
+  if (password) {
+    message += `\nرمز عبور: ${password}`;
+  } else {
+    message += `\nرمز عبور: (از مربی خودش بپرس، یا از فرم «ویرایش» پسورد جدید براش تنظیم کن)`;
+  }
+
+  message += `
+
+برای دسترسی راحت‌تر، بعد از ورود از منوی مرورگرت گزینه‌ی «افزودن به صفحه اصلی» (Add to Home Screen) رو بزن تا مثل یه اپ رو گوشیت داشته باشیش.
+
+موفق باشی 💪`;
+
+  copyTextToClipboard(message);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "trainee/base_trainee.html" %}
+{% block title %}پروفایل من - FitCoach{% endblock %}
+{% block page_title %}پروفایل{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-user text-accent"></i> پروفایل من</h2>
+  <a href="{% url 'trainee:update_metrics' %}" class="btn btn-primary btn-sm">
+    <i class="fas fa-edit"></i> به‌روزرسانی اندازه‌ها
+  </a>
+</div>
+
+<!-- اطلاعات شخصی (تمام‌عرض، مرتب و رسپانسیو) -->
+<div class="card profile-info-card">
+  <div class="profile-info-header">
+    <div class="profile-info-avatar">{{ user.first_name|slice:":1"|default:user.username|slice:":1" }}</div>
+    <div>
+      <div class="profile-info-name">{{ user.get_full_name|default:"-" }}</div>
+      <div class="profile-info-username">@{{ user.username }}</div>
+    </div>
+  </div>
+  <div class="profile-info-grid">
+    <div class="profile-info-field">
+      <div class="pf-label"><i class="fas fa-phone"></i> تلفن</div>
+      <div class="pf-value" dir="ltr">{{ user.phone|default:"-" }}</div>
+    </div>
+    <div class="profile-info-field">
+      <div class="pf-label"><i class="fas fa-weight"></i> وزن</div>
+      <div class="pf-value" dir="ltr">{% if profile.weight %}{{ profile.weight }} kg{% else %}-{% endif %}</div>
+    </div>
+    <div class="profile-info-field">
+      <div class="pf-label"><i class="fas fa-ruler-vertical"></i> قد</div>
+      <div class="pf-value" dir="ltr">{% if profile.height %}{{ profile.height }} cm{% else %}-{% endif %}</div>
+    </div>
+    <div class="profile-info-field">
+      <div class="pf-label"><i class="fas fa-birthday-cake"></i> سن</div>
+      <div class="pf-value" dir="ltr">{% if profile.age %}{{ profile.age }} سال{% else %}-{% endif %}</div>
+    </div>
+  </div>
+</div>
+
+<div class="dashboard-two-col">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-heartbeat text-accent"></i> BMI</span>
+    </div>
+    {% if profile.bmi %}
+    <div style="text-align:center;padding:1rem 0">
+      <div style="font-size:3rem;font-weight:700;
+        color:{% if profile.bmi_status == 'normal' %}var(--success){% elif profile.bmi_status == 'underweight' %}var(--info){% elif profile.bmi_status == 'overweight' %}var(--warning){% else %}var(--danger){% endif %}">
+        {{ profile.bmi }}
+      </div>
+      <div class="badge {% if profile.bmi_status == 'normal' %}badge-success{% elif profile.bmi_status == 'underweight' %}badge-info{% elif profile.bmi_status == 'overweight' %}badge-warning{% else %}badge-danger{% endif %}" style="margin-top:0.5rem;font-size:0.85rem">
+        {{ profile.get_bmi_status_display }}
+      </div>
+      {% if profile.weight_diff %}
+        {% if profile.weight_diff > 0 %}
+        <div style="font-size:0.82rem;color:var(--warning);margin-top:0.6rem">
+          <i class="fas fa-arrow-up"></i> {{ profile.weight_diff_abs }} کیلوگرم اضافه وزن نسبت به وزن سالم
+        </div>
+        {% else %}
+        <div style="font-size:0.82rem;color:var(--info);margin-top:0.6rem">
+          <i class="fas fa-arrow-down"></i> {{ profile.weight_diff_abs }} کیلوگرم کمبود وزن نسبت به وزن سالم
+        </div>
+        {% endif %}
+      {% elif profile.weight and profile.height %}
+      <div style="font-size:0.82rem;color:var(--success);margin-top:0.6rem">
+        <i class="fas fa-check-circle"></i> وزن در محدوده‌ی سالم است
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:1rem"><i class="fas fa-weight"></i><p>وارد نشده</p></div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-user-tie text-accent"></i> مربی من</span>
+    </div>
+    {% if profile.coach %}
+    <div style="display:flex;align-items:center;gap:1rem">
+      <div class="user-avatar" style="width:48px;height:48px;font-size:1.2rem">
+        {{ profile.coach.first_name|slice:":1"|default:profile.coach.username|slice:":1" }}
+      </div>
+      <div>
+        <div style="font-weight:700">{{ profile.coach.get_full_name|default:profile.coach.username }}</div>
+        {% if profile.coach.phone %}
+        <div style="font-size:0.82rem;color:var(--text-muted)" dir="ltr">{{ profile.coach.phone }}</div>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:1rem"><i class="fas fa-user-slash"></i><p>مربی تعریف نشده</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

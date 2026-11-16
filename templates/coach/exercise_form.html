@@ -1,0 +1,98 @@
+{% extends "coach/base_coach.html" %}
+{% block title %}{% if action == 'add' %}حرکت جدید{% else %}ویرایش حرکت{% endif %} - FitCoach{% endblock %}
+{% block page_title %}{% if action == 'add' %}حرکت جدید{% else %}ویرایش حرکت{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-{% if action == 'add' %}plus-circle{% else %}edit{% endif %} text-accent"></i>
+    {% if action == 'add' %}افزودن حرکت جدید{% else %}ویرایش: {{ exercise.name }}{% endif %}
+  </h2>
+  <a href="{% url 'coach:exercise_list' %}" class="btn btn-outline">
+    <i class="fas fa-arrow-right"></i> بازگشت
+  </a>
+</div>
+
+<div class="card" style="max-width:650px">
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">نام حرکت <span style="color:var(--danger)">*</span></label>
+        <input type="text" name="name" class="form-control" required
+               value="{{ exercise.name|default:'' }}" placeholder="مثال: پرس سینه با هالتر">
+      </div>
+      <div class="form-group">
+        <label class="form-label">دسته‌بندی <span style="color:var(--danger)">*</span></label>
+        <select name="category" class="form-control" required>
+          <option value="">انتخاب کنید...</option>
+          {% for val, label in categories %}
+          <option value="{{ val }}" {% if exercise.category == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">توضیحات</label>
+      <textarea name="description" class="form-control" rows="3"
+                placeholder="توضیح نحوه اجرای حرکت...">{{ exercise.description|default:'' }}</textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">تصویر</label>
+        {% if exercise.image %}
+        <div style="margin-bottom:0.5rem">
+          <img src="{{ exercise.image.url }}" style="height:80px;border-radius:8px;object-fit:cover">
+        </div>
+        {% endif %}
+        <input type="file" name="image" class="form-control" accept="image/*" id="imageInput">
+        <div id="imagePreviewWrap" style="margin-top:0.5rem;display:none">
+          <img id="imagePreview" style="height:80px;border-radius:8px;object-fit:cover">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ویدیو (آپلود)</label>
+        {% if exercise.video %}
+        <div style="margin-bottom:0.5rem;font-size:0.8rem;color:var(--success)">
+          <i class="fas fa-video"></i> فایل موجود
+        </div>
+        {% endif %}
+        <input type="file" name="video" class="form-control" accept="video/*">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">یا لینک ویدیو (YouTube / آپارات)</label>
+      <input type="url" name="video_url" class="form-control" dir="ltr"
+             value="{{ exercise.video_url|default:'' }}"
+             placeholder="https://youtube.com/watch?v=...">
+    </div>
+
+    <div style="display:flex;gap:1rem;justify-content:flex-end;flex-wrap:wrap">
+      <a href="{% url 'coach:exercise_list' %}" class="btn btn-outline">انصراف</a>
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i>
+        {% if action == 'add' %}ذخیره حرکت{% else %}ذخیره تغییرات{% endif %}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('imageInput').addEventListener('change', function() {
+  const file = this.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('imagePreview').src = e.target.result;
+      document.getElementById('imagePreviewWrap').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+});
+</script>
+{% endblock %}

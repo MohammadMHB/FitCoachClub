@@ -1,0 +1,101 @@
+{% extends "trainee/base_trainee.html" %}
+{% block title %}به‌روزرسانی اندازه‌ها - FitCoach{% endblock %}
+{% block page_title %}به‌روزرسانی{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-chart-line text-accent"></i> به‌روزرسانی اندازه‌های بدن</h2>
+  <a href="{% url 'trainee:profile' %}" class="btn btn-outline btn-sm">
+    <i class="fas fa-arrow-right"></i> بازگشت
+  </a>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:1.5rem;margin-bottom:1.5rem">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-history text-accent"></i> وضعیت فعلی</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.875rem;margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;padding-bottom:0.75rem;border-bottom:1px solid var(--glass-border)">
+        <span style="color:var(--text-muted);font-size:0.82rem">وزن</span>
+        <strong dir="ltr">{% if profile.weight %}{{ profile.weight }} kg{% else %}-{% endif %}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding-bottom:0.75rem;border-bottom:1px solid var(--glass-border)">
+        <span style="color:var(--text-muted);font-size:0.82rem">قد</span>
+        <strong dir="ltr">{% if profile.height %}{{ profile.height }} cm{% else %}-{% endif %}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text-muted);font-size:0.82rem">BMI</span>
+        <strong dir="ltr" {% if profile.bmi %}style="color:{% if profile.bmi_status == 'normal' %}var(--success){% elif profile.bmi_status == 'overweight' %}var(--warning){% else %}var(--info){% endif %}"{% endif %}>
+          {% if profile.bmi %}{{ profile.bmi }} - {{ profile.get_bmi_status_display }}{% else %}-{% endif %}
+        </strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-edit text-accent"></i> مقادیر جدید</span>
+    </div>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">وزن فعلی (kg)</label>
+        <input type="number" name="weight" class="form-control" dir="ltr" step="0.1" min="20" max="300"
+               value="{{ profile.weight|default:'' }}" placeholder="مثال: 75.5" id="wInput">
+      </div>
+      <div class="form-group">
+        <label class="form-label">قد فعلی (cm)</label>
+        <input type="number" name="height" class="form-control" dir="ltr" step="0.1" min="100" max="250"
+               value="{{ profile.height|default:'' }}" placeholder="مثال: 175" id="hInput">
+      </div>
+      <div class="form-group">
+        <label class="form-label">سن</label>
+        <input type="number" name="age" class="form-control" dir="ltr" min="5" max="120"
+               value="{{ profile.age|default:'' }}" placeholder="مثال: 28">
+      </div>
+
+      <!-- Live BMI Preview -->
+      <div id="bmiLive" style="display:none;margin-bottom:1.25rem;padding:0.875rem;background:var(--bg-card);border:1px solid var(--glass-border);border-radius:var(--radius-sm);text-align:center">
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.25rem">BMI پیش‌نمایش</div>
+        <div style="font-size:2rem;font-weight:700" id="bmiLiveVal">-</div>
+        <div style="font-weight:600;font-size:0.9rem" id="bmiLiveStat">-</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%">
+        <i class="fas fa-save"></i> ذخیره و به‌روزرسانی
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Live BMI
+const wInput = document.getElementById('wInput');
+const hInput = document.getElementById('hInput');
+function updateLiveBMI() {
+  const w = parseFloat(wInput.value), h = parseFloat(hInput.value);
+  const bmiDiv = document.getElementById('bmiLive');
+  if (w && h && h > 50) {
+    const bmi = +(w / Math.pow(h/100, 2)).toFixed(1);
+    let st, color;
+    if (bmi < 18.5) { st='لاغر'; color='var(--info)'; }
+    else if (bmi < 25) { st='نرمال ✓'; color='var(--success)'; }
+    else if (bmi < 30) { st='اضافه وزن'; color='var(--warning)'; }
+    else { st='چاق'; color='var(--danger)'; }
+    document.getElementById('bmiLiveVal').textContent = bmi;
+    document.getElementById('bmiLiveVal').style.color = color;
+    document.getElementById('bmiLiveStat').textContent = st;
+    document.getElementById('bmiLiveStat').style.color = color;
+    bmiDiv.style.display = 'block';
+  } else {
+    bmiDiv.style.display = 'none';
+  }
+}
+wInput.addEventListener('input', updateLiveBMI);
+hInput.addEventListener('input', updateLiveBMI);
+updateLiveBMI();
+</script>
+{% endblock %}

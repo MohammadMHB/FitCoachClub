@@ -1,0 +1,38 @@
+{% extends "coach/base_coach.html" %}
+{% block title %}اعلان‌ها - FitCoach{% endblock %}
+{% block page_title %}اعلان‌ها{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-bell text-accent"></i> اعلان‌ها</h2>
+</div>
+
+<!-- All Notifications -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-history text-accent"></i> همه اعلان‌ها</span>
+  </div>
+  {% if notifications %}
+    {% for notif in notifications %}
+    <div class="notif-item {% if not notif.is_read %}unread{% endif %}">
+      <div class="notif-icon {% if notif.notif_type == 'new_trainee' %}ic-yellow{% elif notif.notif_type == 'program_ready' %}ic-green{% else %}ic-purple{% endif %}">
+        <i class="fas {% if notif.notif_type == 'new_trainee' %}fa-user-plus{% elif notif.notif_type == 'program_ready' %}fa-check{% else %}fa-bell{% endif %}"></i>
+      </div>
+      <div style="flex:1">
+        <div class="notif-title">{{ notif.title }}</div>
+        <div class="notif-msg">{{ notif.message }}</div>
+        <div class="notif-time"><i class="fas fa-clock"></i> {{ notif.created_at|timesince }} پیش</div>
+      </div>
+      {% if not notif.is_read %}
+      <span style="width:8px;height:8px;background:var(--accent);border-radius:50%;flex-shrink:0;margin-top:0.3rem"></span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-bell-slash"></i>
+    <p>اعلانی موجود نیست</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

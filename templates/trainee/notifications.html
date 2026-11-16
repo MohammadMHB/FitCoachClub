@@ -1,0 +1,27 @@
+{% extends "trainee/base_trainee.html" %}
+{% block title %}اعلان‌ها - FitCoach{% endblock %}
+{% block page_title %}اعلان‌ها{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-bell text-accent"></i> اعلان‌ها</h2>
+</div>
+<div class="card">
+  {% if notifications %}
+    {% for notif in notifications %}
+    <div class="notif-item {% if not notif.is_read %}unread{% endif %}">
+      <div class="notif-icon {% if notif.notif_type == 'program_ready' %}ic-green{% else %}ic-purple{% endif %}">
+        <i class="fas {% if notif.notif_type == 'program_ready' %}fa-check{% else %}fa-bell{% endif %}"></i>
+      </div>
+      <div>
+        <div class="notif-title">{{ notif.title }}</div>
+        <div class="notif-msg">{{ notif.message }}</div>
+        <div class="notif-time"><i class="fas fa-clock"></i> {{ notif.created_at|timesince }} پیش</div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-state"><i class="fas fa-bell-slash"></i><p>اعلانی موجود نیست</p></div>
+  {% endif %}
+</div>
+{% endblock %}

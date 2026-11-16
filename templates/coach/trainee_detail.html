@@ -1,0 +1,351 @@
+{% extends "coach/base_coach.html" %}
+{% block title %}مشخصات شاگرد - FitCoach{% endblock %}
+{% block page_title %}مشخصات شاگرد{% endblock %}
+
+{% block extra_css %}
+<style>
+/* رو دسکتاپ: دکمه‌ها (چپ) + BMI (وسط) + مشخصات (راست) سه‌تایی کنار هم،
+   با تناسب نزدیک به‌هم و فاصله‌ی کم. رو موبایل دست‌نخورده می‌مونه. */
+.trainee-detail-top {
+  display: flex; flex-direction: column; gap: 1.5rem;
+}
+.trainee-detail-actions-col {
+  display: flex; flex-direction: column; gap: 0.6rem;
+}
+.trainee-detail-actions-col .actions-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.6rem;
+}
+@media (min-width: 769px) {
+  .trainee-detail-top {
+    display: grid;
+    grid-template-columns: minmax(230px, 300px) minmax(200px, 1fr) minmax(280px, 1.3fr);
+    gap: 1rem;
+    align-items: start;
+  }
+  .trainee-detail-actions-col { order: 3; }
+  .trainee-detail-actions-col .actions-row { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .trainee-detail-actions-col .btn { padding: 0.45rem 0.6rem; font-size: 0.78rem; }
+  .trainee-detail-bmi-col { order: 2; margin-bottom: 0 !important; }
+  .trainee-detail-profile-col { order: 1; margin-bottom: 0 !important; }
+  .trainee-detail-profile-col .profile-info-grid { grid-template-columns: 1fr; gap: 0.6rem; }
+  .trainee-detail-profile-col .profile-info-field {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 0.6rem; border-bottom: 1px solid var(--glass-border);
+  }
+  .trainee-detail-profile-col .profile-info-field .pf-label { margin-bottom: 0; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h2><i class="fas fa-user text-accent"></i> {{ profile.user.get_full_name|default:profile.user.username }}</h2>
+    <p class="text-muted" style="font-size:0.82rem;margin-top:0.2rem">@{{ profile.user.username }}</p>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <i class="fas fa-exclamation-triangle" style="font-size:2rem;color:var(--danger);margin-bottom:1rem"></i>
+    <h3>تأیید حذف</h3>
+    <p id="confirmMessage"></p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="confirmBtn">حذف</button>
+      <button class="btn btn-outline" onclick="closeModal('confirmModal')">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<div class="trainee-detail-top">
+  <!-- دکمه‌ها: رو موبایل بالا، رو دسکتاپ سمت چپ -->
+  <div class="trainee-detail-actions-col">
+    <!-- دکمه‌های رنگی (اقدامات اصلی) -->
+    <div class="actions-row">
+      <button type="button" class="btn btn-success btn-sm" style="justify-content:center" onclick="copyInviteMessage()">
+        <i class="fas fa-paper-plane"></i> ارسال به شاگرد
+      </button>
+      <a href="{% url 'coach:program_create' profile.pk %}" class="btn btn-primary btn-sm" style="justify-content:center">
+        <i class="fas fa-plus"></i> برنامه جدید
+      </a>
+      {% if nutrition_enabled %}
+      <a href="{% url 'coach:nutrition_create' profile.pk %}" class="btn btn-primary btn-sm" style="justify-content:center">
+        <i class="fas fa-utensils"></i> رژیم جدید
+      </a>
+      {% endif %}
+      <form method="POST" action="{% url 'coach:trainee_toggle' profile.pk %}" style="display:contents">
+        {% csrf_token %}
+        <button class="btn btn-warning btn-sm" style="justify-content:center" title="فعال/غیرفعال">
+          <i class="fas {% if profile.user.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+          {% if profile.user.is_active %}غیرفعال کردن{% else %}فعال کردن{% endif %}
+        </button>
+      </form>
+      <form method="POST" action="{% url 'coach:trainee_delete' profile.pk %}" id="del-detail-{{ profile.pk }}" style="display:contents">
+        {% csrf_token %}
+        <button type="button" class="btn btn-danger btn-sm" style="justify-content:center" title="حذف"
+                onclick="confirmDelete('del-detail-{{ profile.pk }}', 'آیا از حذف {{ profile.user.get_full_name }} مطمئنید؟')">
+          <i class="fas fa-trash"></i> حذف
+        </button>
+      </form>
+    </div>
+    <!-- دکمه‌های بی‌رنگ (ویرایش/بازگشت) -->
+    <div class="actions-row">
+      <a href="{% url 'coach:trainee_edit' profile.pk %}" class="btn btn-outline btn-sm" style="justify-content:center">
+        <i class="fas fa-edit"></i> ویرایش
+      </a>
+      <a href="{% url 'coach:trainee_list' %}" class="btn btn-outline btn-sm" style="justify-content:center">
+        <i class="fas fa-arrow-right"></i> بازگشت
+      </a>
+    </div>
+  </div>
+
+  <!-- جعبه‌ی BMI -->
+  <div class="trainee-detail-bmi-col">
+  {% if profile.bmi %}
+  <div class="bmi-mini-box">
+    <div class="bmi-mini-head">
+      <span><i class="fas fa-heartbeat"></i> شاخص BMI</span>
+      <span class="badge badge-{% if profile.bmi_status == 'normal' %}success{% elif profile.bmi_status == 'underweight' %}info{% elif profile.bmi_status == 'overweight' %}warning{% else %}danger{% endif %}" style="font-size:0.68rem">
+        {{ profile.get_bmi_status_display }}
+      </span>
+    </div>
+    <div class="bmi-mini-number-row">
+      <span class="bmi-mini-number"
+        style="color:{% if profile.bmi_status == 'normal' %}var(--success){% elif profile.bmi_status == 'underweight' %}var(--info){% elif profile.bmi_status == 'overweight' %}var(--warning){% else %}var(--danger){% endif %}">
+        {{ profile.bmi }}
+      </span>
+    </div>
+    <div class="bmi-mini-gauge">
+      {% if profile.bmi_status == 'underweight' %}
+        <div style="height:100%;width:20%;background:var(--info)"></div>
+      {% elif profile.bmi_status == 'normal' %}
+        <div style="height:100%;width:45%;background:var(--success)"></div>
+      {% elif profile.bmi_status == 'overweight' %}
+        <div style="height:100%;width:65%;background:var(--warning)"></div>
+      {% else %}
+        <div style="height:100%;width:85%;background:var(--danger)"></div>
+      {% endif %}
+    </div>
+    {% if profile.weight_diff %}
+      {% if profile.weight_diff > 0 %}
+      <div class="bmi-mini-diff" style="color:var(--warning)"><i class="fas fa-arrow-up"></i> {{ profile.weight_diff_abs }} کیلو اضافه‌وزن</div>
+      {% else %}
+      <div class="bmi-mini-diff" style="color:var(--info)"><i class="fas fa-arrow-down"></i> {{ profile.weight_diff_abs }} کیلو کمبود وزن</div>
+      {% endif %}
+    {% else %}
+      <div class="bmi-mini-diff" style="color:var(--success)"><i class="fas fa-check-circle"></i> وزن در محدوده‌ی سالم</div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="bmi-mini-box">
+    <div class="bmi-mini-head"><span><i class="fas fa-heartbeat"></i> شاخص BMI</span></div>
+    <p class="text-muted" style="font-size:0.8rem">اطلاعات ثبت نشده</p>
+  </div>
+  {% endif %}
+  </div>
+
+  <!-- اطلاعات شخصی -->
+  <div class="trainee-detail-profile-col">
+  <div class="card profile-info-card">
+    <div class="profile-info-header">
+      <div class="profile-info-avatar">{{ profile.user.first_name|slice:":1"|default:"?" }}</div>
+      <div>
+        <div class="profile-info-name">{{ profile.user.get_full_name|default:"-" }}</div>
+        <div class="profile-info-username">@{{ profile.user.username }}</div>
+      </div>
+      <span class="profile-info-status badge {% if profile.user.is_active %}badge-success{% else %}badge-danger{% endif %}">
+        {% if profile.user.is_active %}فعال{% else %}غیرفعال{% endif %}
+      </span>
+    </div>
+    <div class="profile-info-grid">
+      <div class="profile-info-field">
+        <div class="pf-label"><i class="fas fa-phone"></i> تلفن</div>
+        <div class="pf-value" dir="ltr">{{ profile.user.phone|default:"-" }}</div>
+      </div>
+      <div class="profile-info-field">
+        <div class="pf-label"><i class="fas fa-weight"></i> وزن</div>
+        <div class="pf-value" dir="ltr">{% if profile.weight %}{{ profile.weight }} kg{% else %}-{% endif %}</div>
+      </div>
+      <div class="profile-info-field">
+        <div class="pf-label"><i class="fas fa-birthday-cake"></i> سن</div>
+        <div class="pf-value" dir="ltr">{% if profile.age %}{{ profile.age }} سال{% else %}-{% endif %}</div>
+      </div>
+      <div class="profile-info-field">
+        <div class="pf-label"><i class="fas fa-ruler-vertical"></i> قد</div>
+        <div class="pf-value" dir="ltr">{% if profile.height %}{{ profile.height }} cm{% else %}-{% endif %}</div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- Active Program -->
+<div class="card" style="margin-bottom:1.5rem">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-clipboard-check text-accent"></i> برنامه فعال</span>
+    <a href="{% url 'coach:program_create' profile.pk %}" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus"></i> برنامه جدید
+    </a>
+  </div>
+  {% if active_program %}
+  <div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem">
+      <div>
+        <div style="font-weight:700;font-size:1rem">{{ active_program.title }}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted)">{{ active_program.created_at|date:"Y/m/d" }}</div>
+      </div>
+      <a href="{% url 'coach:program_view' active_program.pk %}" class="btn btn-outline btn-sm">
+        <i class="fas fa-eye"></i> مشاهده کامل
+      </a>
+    </div>
+    <div style="margin-bottom:0.75rem">
+      {% if active_program.is_expired %}
+      <span class="badge badge-danger"><i class="fas fa-hourglass-end"></i> برنامه منقضی شده - نیاز به تمدید</span>
+      {% elif active_program.needs_renewal_soon %}
+      <span class="badge badge-warning"><i class="fas fa-hourglass-half"></i> فقط {{ active_program.days_remaining }} روز تا پایان برنامه مانده</span>
+      {% else %}
+      <span class="badge badge-purple"><i class="fas fa-hourglass-half"></i> {{ active_program.days_remaining }} روز از {{ active_program.duration_days }} روز باقی مانده</span>
+      {% endif %}
+    </div>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+      {% for day in active_program.days.all %}
+      <span class="badge badge-purple">
+        <i class="fas fa-calendar-day"></i> {{ day.get_day_number_display }}
+        ({{ day.exercises.count }} حرکت)
+      </span>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-clipboard"></i>
+    <p>هنوز برنامه‌ای تنظیم نشده</p>
+    <a href="{% url 'coach:program_create' profile.pk %}" class="btn btn-primary btn-sm">تنظیم برنامه</a>
+  </div>
+  {% endif %}
+</div>
+
+{% if nutrition_enabled %}
+<!-- Active Diet -->
+<div class="card" style="margin-bottom:1.5rem">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-utensils text-accent"></i> رژیم غذایی فعال</span>
+    <a href="{% url 'coach:nutrition_create' profile.pk %}" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus"></i> رژیم جدید
+    </a>
+  </div>
+  {% if active_diet %}
+  <div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem">
+      <div>
+        <div style="font-weight:700;font-size:1rem">{{ active_diet.title }}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted)">{{ active_diet.created_at|date:"Y/m/d" }}</div>
+      </div>
+      <a href="{% url 'coach:nutrition_view' active_diet.pk %}" class="btn btn-outline btn-sm">
+        <i class="fas fa-eye"></i> مشاهده کامل
+      </a>
+    </div>
+    <div style="margin-bottom:0.75rem">
+      {% if active_diet.is_expired %}
+      <span class="badge badge-danger"><i class="fas fa-hourglass-end"></i> رژیم منقضی شده - نیاز به تمدید</span>
+      {% elif active_diet.needs_renewal_soon %}
+      <span class="badge badge-warning"><i class="fas fa-hourglass-half"></i> فقط {{ active_diet.days_remaining }} روز تا پایان رژیم مانده</span>
+      {% else %}
+      <span class="badge badge-purple"><i class="fas fa-hourglass-half"></i> {{ active_diet.days_remaining }} روز از {{ active_diet.duration_days }} روز باقی مانده</span>
+      {% endif %}
+    </div>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+      {% for day in active_diet.days.all %}
+      <span class="badge badge-purple">
+        <i class="fas fa-calendar-day"></i> {{ day.get_day_number_display }}
+        ({{ day.meals.count }} وعده)
+      </span>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-utensils"></i>
+    <p>هنوز رژیم غذایی تنظیم نشده</p>
+    <a href="{% url 'coach:nutrition_create' profile.pk %}" class="btn btn-primary btn-sm">تنظیم رژیم</a>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Past Programs -->
+{% if past_programs %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-history text-accent"></i> برنامه‌های قبلی</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:0.5rem">
+    {% for prog in past_programs %}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;background:var(--bg-card);border:1px solid var(--glass-border);border-radius:var(--radius-sm)">
+      <div>
+        <div style="font-weight:600;font-size:0.875rem">{{ prog.title }}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">{{ prog.created_at|date:"Y/m/d" }}</div>
+      </div>
+      <a href="{% url 'coach:program_view' prog.pk %}" class="btn btn-outline btn-sm">
+        <i class="fas fa-eye"></i>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Past Diets -->
+{% if nutrition_enabled and past_diets %}
+<div class="card" style="margin-top:1.5rem">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-history text-accent"></i> رژیم‌های قبلی</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:0.5rem">
+    {% for diet in past_diets %}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;background:var(--bg-card);border:1px solid var(--glass-border);border-radius:var(--radius-sm)">
+      <div>
+        <div style="font-weight:600;font-size:0.875rem">{{ diet.title }}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">{{ diet.created_at|date:"Y/m/d" }}</div>
+      </div>
+      <a href="{% url 'coach:nutrition_view' diet.pk %}" class="btn btn-outline btn-sm">
+        <i class="fas fa-eye"></i>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyInviteMessage() {
+  const fullName = "{{ profile.user.get_full_name|default:profile.user.username|escapejs }}";
+  const username = "{{ profile.user.username|escapejs }}";
+  const password = "{{ profile.last_password_plain|default:''|escapejs }}";
+  const siteUrl  = "{{ request.scheme }}://{{ request.get_host }}{% url 'accounts:login' %}";
+
+  let message = `سلام ${fullName} 👋
+برنامه‌ت تو فیت‌کوچ آماده‌ست!
+
+آدرس سایت: ${siteUrl}
+نام کاربری: ${username}`;
+
+  if (password) {
+    message += `\nرمز عبور: ${password}`;
+  } else {
+    message += `\nرمز عبور: (از مربی خودت بپرس، یا از فرم «ویرایش» پسورد جدید برات تنظیم کنه)`;
+  }
+
+  message += `
+
+برای دسترسی راحت‌تر، بعد از ورود از منوی مرورگرت گزینه‌ی «افزودن به صفحه اصلی» (Add to Home Screen) رو بزن تا مثل یه اپ رو گوشیت داشته باشیش.
+
+موفق باشی 💪`;
+
+  copyTextToClipboard(message);
+}
+</script>
+{% endblock %}

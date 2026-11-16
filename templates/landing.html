@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#09090b">
+{% if nutrition_enabled %}
+<meta name="description" content="فیت‌کوچ — نرم‌افزار مدیریت شاگرد برای مربیان بدنسازی. برنامه تمرینی، رژیم غذایی و پیگیری پیشرفت در یک پنل.">
+{% else %}
+<meta name="description" content="فیت‌کوچ — نرم‌افزار مدیریت شاگرد برای مربیان بدنسازی. برنامه تمرینی و پیگیری پیشرفت در یک پنل.">
+{% endif %}
+<title>FitCoach</title>
+<link rel="manifest" href="/static/manifest.json">
+
+<style>
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/static/fonts/Vazirmatn-Regular.woff2') format('woff2');
+  font-weight: 400; font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/static/fonts/Vazirmatn-Medium.woff2') format('woff2');
+  font-weight: 500; font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/static/fonts/Vazirmatn-Bold.woff2') format('woff2');
+  font-weight: 700; font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/static/fonts/Vazirmatn-Black.woff2') format('woff2');
+  font-weight: 900; font-display: swap;
+}
+</style>
+<link rel="stylesheet" href="/static/icons/fontawesome/css/all.min.css">
+
+<style>
+/* ============================================================
+   FITCOACH — SAAS LANDING v12
+   ============================================================ */
+:root {
+  --bg: #09090b;
+  --bg-2: #0e0e11;
+  --surface: #131316;
+  --surface-2: #1a1a1f;
+  --border: #212127;
+  --border-2: #2c2c34;
+  --border-3: #383842;
+  --ink: #f4f4f6;
+  --ink-2: #a1a1aa;
+  --ink-3: #71717a;
+  --ink-4: #52525b;
+  --accent: #818cf8;
+  --accent-2: #a5b4fc;
+  --accent-soft: rgba(129,140,248,0.08);
+  --green: #10b981;
+  --amber: #f59e0b;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.65;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
+  font-weight: 400;
+}
+a { color: inherit; text-decoration: none; }
+img, svg { display: block; max-width: 100%; }
+button { font-family: inherit; cursor: pointer; }
+ul { list-style: none; }
+
+::selection { background: var(--accent); color: var(--bg); }
+
+/* ---------- LAYOUT ---------- */
+.container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+.container-sm {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ---------- TYPOGRAPHY ---------- */
+.h1 {
+  font-weight: 900;
+  font-size: clamp(2.25rem, 4.8vw, 3.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+.h2 {
+  font-weight: 900;
+  font-size: clamp(1.625rem, 3vw, 2.25rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+.lede {
+  font-size: 1.0625rem;
+  color: var(--ink-2);
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  padding: 0.375rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 100px;
+  letter-spacing: 0.01em;
+}
+.eyebrow .pulse {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+  animation: pulse 2.4s infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+  50% { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+}
+
+/* ---------- BUTTONS ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.625rem 1.125rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  cursor: pointer;
+  line-height: 1;
+  letter-spacing: -0.005em;
+}
+.btn-primary {
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 600;
+}
+.btn-primary:hover {
+  background: white;
+  transform: translateY(-1px);
+}
+.btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--border-3);
+}
+.btn-secondary:hover {
+  background: var(--surface);
+  border-color: var(--ink-3);
+}
+.btn-lg {
+  padding: 0.75rem 1.375rem;
+  font-size: 0.9375rem;
+  border-radius: 9px;
+}
+.btn i { font-size: 0.8125rem; }
+
+/* ---------- NAV ---------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(9,9,11,0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+.nav.scrolled { border-bottom-color: var(--border); }
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  letter-spacing: -0.02em;
+}
+.brand-mark {
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  background: var(--ink);
+  color: var(--bg);
+  display: grid; place-items: center;
+  font-size: 0.8125rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  position: absolute;
+  right: 50%;
+  transform: translateX(50%);
+}
+.nav-menu a {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink-3);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.nav-menu a:hover { color: var(--ink); background: var(--surface); }
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.nav-toggle {
+  display: none;
+  background: none;
+  border: 1px solid var(--border-2);
+  color: var(--ink);
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  font-size: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+.nav-mobile {
+  display: none;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  padding: 0.75rem 1.5rem 1.25rem;
+}
+.nav-mobile.open { display: block; }
+.nav-mobile a {
+  display: block;
+  padding: 0.75rem 0.25rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--border);
+}
+.nav-mobile a:last-of-type { border-bottom: none; }
+.nav-mobile .btn {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+/* ---------- HERO ---------- */
+.hero {
+  padding: 6rem 0 7rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1000px;
+  height: 800px;
+  background: radial-gradient(ellipse, var(--accent-soft), transparent 60%);
+  pointer-events: none;
+  opacity: 0.7;
+}
+.hero-inner {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+.hero-copy { max-width: 30rem; }
+.hero-copy .eyebrow { margin-bottom: 1.75rem; }
+.hero-copy .h1 { margin-bottom: 1.5rem; }
+.hero-copy .h1 .accent { color: var(--ink-3); font-weight: 700; }
+.hero-copy .lede { margin-bottom: 2.25rem; max-width: 28rem; }
+.hero-actions {
+  display: flex;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+.hero-foot {
+  font-size: 0.8125rem;
+  color: var(--ink-4);
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+.hero-foot .dot-sep { opacity: 0.5; }
+
+/* ---------- HERO SYMBOL: دمبل هندسی ---------- */
+.hero-symbol {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 420px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+}
+
+.orbit {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid var(--border-2);
+  pointer-events: none;
+}
+.orbit.o1 {
+  width: 100%; height: 100%;
+  border-color: rgba(129,140,248,0.08);
+}
+.orbit.o2 {
+  width: 78%; height: 78%;
+  border-color: rgba(129,140,248,0.14);
+}
+.orbit.o3 {
+  width: 56%; height: 56%;
+  border-color: rgba(129,140,248,0.22);
+}
+
+.hero-symbol::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70%;
+  height: 70%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(129,140,248,0.18), transparent 65%);
+  filter: blur(30px);
+}
+
+.orbit-dot {
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  box-shadow: 0 0 12px rgba(165,180,252,0.8);
+}
+.orbit-dot.d1 {
+  top: 0; left: 50%;
+  transform: translate(-50%, -50%);
+}
+.orbit-dot.d2 {
+  bottom: 11%; right: 11%;
+}
+
+.dumbbell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  z-index: 2;
+  transform: rotate(-12deg);
+  filter: drop-shadow(0 20px 40px rgba(129,140,248,0.35));
+}
+.dumbbell .bar {
+  width: 140px;
+  height: 10px;
+  background: linear-gradient(180deg, #3a3a44, #202027);
+  border: 1px solid #2a2a33;
+  border-radius: 2px;
+  position: relative;
+}
+.dumbbell .bar::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60%;
+  height: 2px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 1px;
+}
+.dumbbell .plate {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 4px;
+  position: relative;
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.4),
+    0 0 0 1px rgba(255,255,255,0.08) inset;
+}
+.dumbbell .plate::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 2px;
+  background: rgba(0,0,0,0.15);
+}
+.dumbbell .plate-inner {
+  width: 22px;
+  height: 70px;
+}
+.dumbbell .plate-outer {
+  width: 16px;
+  height: 52px;
+}
+.dumbbell .sleeve {
+  width: 8px;
+  height: 20px;
+  background: linear-gradient(180deg, #4a4a55, #2a2a33);
+  border-radius: 2px;
+  border: 1px solid #2a2a33;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .orbit.o1 { animation: spin 40s linear infinite; }
+  .orbit.o2 { animation: spin 30s linear infinite reverse; }
+}
+@keyframes spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ---------- SECTION ---------- */
+.section { padding: 6rem 0; }
+.section-header {
+  max-width: 38rem;
+  margin-bottom: 3.5rem;
+}
+.section-header.center { margin-inline: auto; text-align: center; }
+.section-header .eyebrow { margin-bottom: 1.25rem; }
+.section-header .h2 { margin-bottom: 1rem; }
+.section-header .lede { max-width: 34rem; }
+.section-header.center .lede { margin-inline: auto; }
+
+/* ---------- FEATURES (همیشه ۳ ستونه) ---------- */
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.feature {
+  background: var(--bg);
+  padding: 2rem 1.75rem;
+  transition: background 0.2s;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+}
+.feature:hover { background: var(--bg-2); }
+.feature h3 {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin-bottom: 0.625rem;
+}
+.feature p {
+  font-size: 0.875rem;
+  color: var(--ink-2);
+  line-height: 1.65;
+  flex: 1;
+}
+
+/* ---------- STEPS ---------- */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  position: relative;
+}
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  right: 6%;
+  left: 6%;
+  height: 1px;
+  background: var(--border-2);
+}
+.step {
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+.step-num {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border-3);
+  display: inline-grid;
+  place-items: center;
+  font-family: ui-monospace, 'SF Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-bottom: 1.25rem;
+  letter-spacing: 0;
+}
+.step h4 {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.step p {
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+  line-height: 1.6;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+/* ---------- STATS ---------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.stat {
+  background: var(--bg);
+  padding: 2.5rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(129,140,248,0.2);
+  display: grid;
+  place-items: center;
+  color: var(--accent-2);
+  font-size: 1rem;
+  margin-bottom: 1.25rem;
+}
+.stat .lbl {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0.625rem;
+  letter-spacing: -0.01em;
+}
+.stat p {
+  font-size: 0.875rem;
+  color: var(--ink-2);
+  line-height: 1.65;
+  max-width: 26ch;
+}
+
+/* ---------- COMPARE ---------- */
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.compare-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+}
+.compare-card.after {
+  background: var(--surface);
+  border-color: var(--border-2);
+}
+.compare-kicker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  margin: 0 auto 1.5rem;
+  letter-spacing: 0.01em;
+}
+.compare-card.before .compare-kicker {
+  background: var(--bg-2);
+  color: var(--ink-3);
+  border: 1px solid var(--border-2);
+}
+.compare-card.after .compare-kicker {
+  background: var(--accent-soft);
+  color: var(--accent-2);
+  border: 1px solid rgba(129,140,248,0.2);
+}
+.compare-card h3 {
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  text-align: center;
+}
+.compare-list {
+  text-align: right;
+}
+.compare-list li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.875rem 0;
+  font-size: 0.875rem;
+  color: var(--ink-2);
+  line-height: 1.6;
+  border-top: 1px solid var(--border);
+}
+.compare-list li:first-child { border-top: none; padding-top: 0; }
+.compare-list i {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  width: 14px;
+  text-align: center;
+}
+.compare-card.before .compare-list i { color: var(--ink-4); }
+.compare-card.after .compare-list i { color: var(--accent-2); }
+
+/* ---------- FAQ ---------- */
+.faq { border-top: 1px solid var(--border); }
+.faq-item { border-bottom: 1px solid var(--border); }
+.faq-item summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.375rem 0;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  color: var(--ink);
+  transition: color 0.15s;
+  letter-spacing: -0.005em;
+}
+.faq-item summary:hover { color: var(--ink-2); }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item .faq-icon {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--border-3);
+  display: grid;
+  place-items: center;
+  font-size: 0.625rem;
+  color: var(--ink-3);
+  transition: all 0.2s;
+}
+.faq-item[open] .faq-icon {
+  transform: rotate(45deg);
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+.faq-item .faq-answer {
+  padding: 0 0 1.375rem;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  max-width: 58ch;
+}
+
+/* ---------- CTA ---------- */
+.cta {
+  padding: 6rem 0;
+  border-top: 1px solid var(--border);
+}
+.cta-inner {
+  max-width: 36rem;
+  margin: 0 auto;
+  text-align: center;
+}
+.cta-inner .eyebrow { margin-bottom: 1.5rem; }
+.cta-inner .h2 { margin-bottom: 1rem; }
+.cta-inner .lede { margin-bottom: 2rem; }
+.cta-actions {
+  display: flex;
+  gap: 0.625rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.cta-note {
+  margin-top: 1.5rem;
+  font-size: 0.8125rem;
+  color: var(--ink-4);
+}
+
+/* ---------- FOOTER ---------- */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 3rem 0 2rem;
+}
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+.footer-links {
+  display: flex;
+  gap: 1.75rem;
+  font-size: 0.8125rem;
+  color: var(--ink-3);
+  flex-wrap: wrap;
+}
+.footer-links a:hover { color: var(--ink); }
+.footer-copy {
+  font-size: 0.8125rem;
+  color: var(--ink-4);
+}
+
+/* ---------- REVEAL ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.in { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
+  .eyebrow .pulse { animation: none; }
+  .orbit.o1, .orbit.o2 { animation: none; }
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1024px) {
+  .hero-inner { grid-template-columns: 1fr; gap: 4rem; }
+  .hero-copy { max-width: 100%; text-align: center; margin: 0 auto; }
+  .hero-copy .eyebrow { margin-inline: auto; }
+  .hero-copy .lede { margin-inline: auto; }
+  .hero-actions { justify-content: center; }
+  .hero-foot { justify-content: center; }
+  .features { grid-template-columns: repeat(2, 1fr); }
+  .steps { grid-template-columns: repeat(2, 1fr); gap: 2.5rem 1.5rem; }
+  .steps::before { display: none; }
+  .nav-menu { position: static; transform: none; }
+}
+
+@media (max-width: 768px) {
+  .container, .container-sm { padding: 0 1.25rem; }
+  .section { padding: 4rem 0; }
+  .section-header { margin-bottom: 2.5rem; }
+  .hero { padding: 3rem 0 4rem; }
+  .cta { padding: 4rem 0; }
+
+  .nav-menu { display: none; }
+  .nav-actions .btn { display: none; }
+  .nav-toggle { display: grid; }
+
+  .features { grid-template-columns: 1fr; }
+  .feature { min-height: auto; padding: 1.5rem; }
+
+  .steps { grid-template-columns: 1fr; gap: 2rem; }
+  .step p { max-width: none; }
+
+  .stats { grid-template-columns: 1fr; }
+  .stat { padding: 2rem 1.5rem; }
+  .stat p { max-width: none; }
+
+  .compare { grid-template-columns: 1fr; }
+  .compare-card { padding: 1.5rem; }
+
+  .cta-actions .btn { width: 100%; }
+
+  .footer { padding: 2.5rem 0 1.5rem; }
+  .footer-inner { flex-direction: column; text-align: center; gap: 1.25rem; }
+  .footer-links { justify-content: center; gap: 1.25rem; }
+
+  .hero-symbol { max-width: 320px; }
+  .dumbbell .bar { width: 110px; height: 8px; }
+  .dumbbell .plate-inner { width: 18px; height: 58px; }
+  .dumbbell .plate-outer { width: 13px; height: 44px; }
+  .dumbbell .sleeve { width: 7px; height: 16px; }
+}
+
+@media (max-width: 400px) {
+  .hero-actions { flex-direction: column; }
+  .hero-actions .btn { width: 100%; }
+  .cta-actions { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav class="nav" id="nav">
+  <div class="container nav-inner">
+    <a href="#top" class="brand">
+      <span class="brand-mark">F</span>
+      FitCoach
+    </a>
+    <div class="nav-menu">
+      <a href="#features">امکانات</a>
+      <a href="#how">نحوه کار</a>
+      <a href="#faq">سوالات</a>
+    </div>
+    <div class="nav-actions">
+      <a href="{% url 'accounts:login' %}" class="btn btn-secondary">ورود</a>
+      <a href="#contact" class="btn btn-primary">درخواست دسترسی</a>
+      <button class="nav-toggle" id="navToggle" aria-label="منو" aria-expanded="false">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </div>
+  <div class="nav-mobile" id="navMobile">
+    <a href="#features">امکانات</a>
+    <a href="#how">نحوه کار</a>
+    <a href="#faq">سوالات</a>
+    <a href="{% url 'accounts:login' %}">ورود</a>
+    <a href="#contact" class="btn btn-primary">درخواست دسترسی</a>
+  </div>
+</nav>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-copy">
+        <h1 class="h1">
+          مدیریت شاگرد‌ها، <span class="accent">بدون آشفتگی</span>
+        </h1>
+        <p class="lede">
+          {% if nutrition_enabled %}
+          برنامه‌ی تمرینی، رژیم غذایی، وزن و تاریخ تمدید هر شاگرد — همه در یک پنل. شاگرد از گوشی خودش می‌بینه، شما فقط کوچینگ می‌کنید.
+          {% else %}
+          برنامه‌ی تمرینی، وزن و تاریخ تمدید هر شاگرد — همه در یک پنل. شاگرد از گوشی خودش می‌بینه، شما فقط کوچینگ می‌کنید.
+          {% endif %}
+        </p>
+        <div class="hero-actions">
+          <a href="#contact" class="btn btn-primary btn-lg">
+            درخواست دسترسی <i class="fas fa-arrow-left"></i>
+          </a>
+          <a href="{% url 'accounts:login' %}" class="btn btn-secondary btn-lg">
+            ورود مربی
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-symbol reveal" aria-hidden="true">
+        <div class="orbit o1"></div>
+        <div class="orbit o2"></div>
+        <div class="orbit o3"></div>
+
+        <span class="orbit-dot d1"></span>
+        <span class="orbit-dot d2"></span>
+
+        <div class="dumbbell">
+          <span class="sleeve"></span>
+          <span class="plate plate-outer"></span>
+          <span class="plate plate-inner"></span>
+          <span class="bar"></span>
+          <span class="plate plate-inner"></span>
+          <span class="plate plate-outer"></span>
+          <span class="sleeve"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header center">
+        <span class="eyebrow">امکانات</span>
+        <h2 class="h2">هر چیزی که برای مربیگری لازم دارید</h2>
+        <p class="lede">
+          نه یه اپ عمومی، بلکه ابزاری که دقیقاً برای کار روزمره‌ی یه مربی طراحی شده.
+        </p>
+      </div>
+
+      <div class="features reveal">
+        <div class="feature">
+          <h3>برنامه‌ی تمرینی</h3>
+          <p>روزهای هفته، ست، تکرار و سوپرست. حرکات رو یک بار ذخیره کنید و روی همه‌ی شاگردها استفاده کنید.</p>
+        </div>
+        {% if nutrition_enabled %}
+        <div class="feature">
+          <h3>رژیم غذایی</h3>
+          <p>بیش از ۱۲۰ ماده‌ی غذایی آماده. دستی بنویسید یا از بانک انتخاب کنید، برای هر وعده و هر روز.</p>
+        </div>
+        {% endif %}
+        <div class="feature">
+          <h3>پیگیری وزن و BMI</h3>
+          <p>شاگرد خودش وزنش رو وارد می‌کنه. سیستم BMI و فاصله تا وزن هدف رو حساب می‌کنه.</p>
+        </div>
+        <div class="feature">
+          <h3>یادآوری خودکار تمدید</h3>
+          <p>قبل از پایان برنامه، هم شاگرد و هم شما پیام یادآوری می‌گیرید. دیگه دنبال تمدید نمی‌دوید.</p>
+        </div>
+        <div class="feature">
+          <h3>خروجی PDF</h3>
+          <p>{% if nutrition_enabled %}برنامه و رژیم هر شاگرد{% else %}برنامه‌ی هر شاگرد{% endif %} در یک کلیک، PDF مرتب و قابل اشتراک.</p>
+        </div>
+        {% if nutrition_enabled %}
+        <div class="feature">
+          <h3>پنل مدیریت کامل</h3>
+          <p>شاگردها، بانک حرکات و غذا، همه زیر دست خودتون.</p>
+        </div>
+        {% else %}
+        <div class="feature">
+          <h3>پشتیبانی مستقیم</h3>
+          <p>هر سوالی داری، مستقیم از خودمون می‌پرسی. نه ربات، نه تیکت.</p>
+        </div>
+        {% endif %}
+        <!-- کارت جدید برای تکمیل ۶ کارت در حالت بدون تغذیه -->
+        {% if not nutrition_enabled %}
+        <div class="feature">
+          <h3>مدیریت شاگردان</h3>
+          <p>لیست کامل شاگردان با وضعیت، تاریخ تمدید و برنامه‌ی فعلی، همه در یک نگاه.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section class="section" id="how">
+    <div class="container">
+      <div class="section-header center">
+        <span class="eyebrow">نحوه کار</span>
+        <h2 class="h2">از اولین ورود تا اولین برنامه</h2>
+      </div>
+
+      <div class="steps reveal">
+        <div class="step">
+          <div class="step-num">01</div>
+          <h4>حساب مربی</h4>
+          <p>حساب مربی براتون ساخته می‌شه و وارد پنل شخصی می‌شید.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <h4>افزودن شاگرد</h4>
+          <p>اطلاعات پایه‌ی شاگرد (قد، وزن، سن) رو ثبت می‌کنید.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <h4>ساخت برنامه</h4>
+          <p>{% if nutrition_enabled %}برنامه‌ی تمرین و رژیم غذایی رو روز‌به‌روز تنظیم می‌کنید.{% else %}برنامه‌ی تمرینی رو روز‌به‌روز تنظیم می‌کنید.{% endif %}</p>
+        </div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <h4>پیگیری پیشرفت</h4>
+          <p>شاگرد از گوشی خودش برنامه رو می‌بینه و پیش می‌ره.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATS ============ -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header center">
+        <span class="eyebrow">چرا وقت آزاد می‌کنه</span>
+        <h2 class="h2">سه چیزی که دیگه لازم نیست نگرانشون باشید</h2>
+      </div>
+
+      <div class="stats reveal">
+        <div class="stat">
+          <div class="stat-icon"><i class="fas fa-folder-open"></i></div>
+          <div class="lbl">فایل پراکنده</div>
+          <p>دیگه نه اکسل، نه PDF توی واتساپ، نه عکس دفترچه. همه‌چیز توی یک پنل.</p>
+        </div>
+        <div class="stat">
+          <div class="stat-icon"><i class="fas fa-link"></i></div>
+          <div class="lbl">لینک برای هر شاگرد</div>
+          <p>هر شاگرد فقط لینک خودش رو داره. از هر مرورگری، هر دستگاهی، بدون نصب.</p>
+        </div>
+        <div class="stat">
+          <div class="stat-icon"><i class="fas fa-clock-rotate-left"></i></div>
+          <div class="lbl">تمدید فراموش‌شده</div>
+          <p>سیستم خودش خبر می‌ده. تاریخ تمدید، پیام یادآوری و گزارش — همه خودکار.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ COMPARE ============ -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header center">
+        <span class="eyebrow">مقایسه</span>
+        <h2 class="h2">قبل و بعد از فیت‌کوچ</h2>
+      </div>
+
+      <div class="compare reveal">
+        <div class="compare-card before">
+          <span class="compare-kicker">بدون فیت‌کوچ</span>
+          <h3>هر شاگرد، یک پروژه‌ی جدا</h3>
+          <ul class="compare-list">
+            <li><i class="fas fa-xmark"></i> فایل اکسل با نسخه‌های بی‌شمار که آخرش نمی‌دونید کدوم درسته.</li>
+            <li><i class="fas fa-xmark"></i> پیام واتساپ گم‌شده بین ده‌ها چت دیگه.</li>
+            <li><i class="fas fa-xmark"></i> یادتون نمی‌مونه کی تموم می‌شه، دستی حساب می‌کنید.</li>
+            <li><i class="fas fa-xmark"></i> برای هر شاگرد جدید، از صفر شروع می‌کنید.</li>
+          </ul>
+        </div>
+        <div class="compare-card after">
+          <span class="compare-kicker">با فیت‌کوچ</span>
+          <h3>یک لینک، همه چیز مرتب</h3>
+          <ul class="compare-list">
+            <li><i class="fas fa-check"></i> پنل اختصاصی هر شاگرد، فقط با لینک خودش.</li>
+            <li><i class="fas fa-check"></i> برنامه از بانک حرکات، در چند کلیک آماده.</li>
+            <li><i class="fas fa-check"></i> سیستم خودش تاریخ تمدید رو یادآوری می‌کنه.</li>
+            <li><i class="fas fa-check"></i> برنامه‌ی هر شاگرد قابل کپی روی بقیه‌ست.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="section" id="faq">
+    <div class="container-sm">
+      <div class="section-header center">
+        <span class="eyebrow">سوالات پرتکرار</span>
+        <h2 class="h2">قبل از اینکه شروع کنید</h2>
+      </div>
+
+      <div class="faq">
+        <details class="faq-item">
+          <summary>
+            برای شروع باید هزینه‌ای بدم؟
+            <span class="faq-icon"><i class="fas fa-plus"></i></span>
+          </summary>
+          <p class="faq-answer">نه. فیت‌کوچ فعلاً رایگانه و داریم با مربی‌های واقعی محصول رو بهتر می‌کنیم. کسایی که الان شروع کنن، شرایط ویژه‌ی خودشون رو دارن.</p>
+        </details>
+        <details class="faq-item">
+          <summary>
+            شاگردهای من باید اپ نصب کنن؟
+            <span class="faq-icon"><i class="fas fa-plus"></i></span>
+          </summary>
+          <p class="faq-answer">نه. هر شاگرد یه لینک اختصاصی می‌گیره که از هر مرورگری — موبایل یا دسکتاپ — باز می‌شه.</p>
+        </details>
+        <details class="faq-item">
+          <summary>
+            {% if nutrition_enabled %}بخش رژیم غذایی هم داره؟{% else %}بعداً بخش رژیم غذایی اضافه می‌شه؟{% endif %}
+            <span class="faq-icon"><i class="fas fa-plus"></i></span>
+          </summary>
+          <p class="faq-answer">{% if nutrition_enabled %}بله. بانک غذایی با بیش از ۱۲۰ ماده‌ی آماده، در کنار برنامه‌ی تمرینی، در همون پنل.{% else %}بله، در نسخه‌های بعدی. ساختار محصول از الان برای اضافه‌شدن رژیم غذایی آماده‌ست.{% endif %}</p>
+        </details>
+        <details class="faq-item">
+          <summary>
+            می‌تونم برنامه‌ی شاگرد قبلی رو روی شاگرد جدید کپی کنم؟
+            <span class="faq-icon"><i class="fas fa-plus"></i></span>
+          </summary>
+          <p class="faq-answer">بله. یکی از کارهایی که وقت زیادی رو آزاد می‌کنه، همین قابلیت کپی برنامه بین شاگردهاست.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA ============ -->
+  <section class="cta" id="contact">
+    <div class="container">
+      <div class="cta-inner reveal">
+        <span class="eyebrow">شروع</span>
+        <h2 class="h2">می‌خواید مربی بعدی فیت‌کوچ باشید؟</h2>
+        <p class="lede">
+          هنوز ثبت‌نام مستقیم نداریم. یه پیام بدید، حساب مربی‌تون رو ظرف چند ساعت براتون فعال می‌کنیم.
+        </p>
+        <div class="cta-actions">
+          <a href="tel:09331842949" class="btn btn-primary btn-lg">
+            تماس مستقیم <i class="fas fa-arrow-left"></i>
+          </a>
+          <a href="https://instagram.com/fitcoach.club" target="_blank" rel="noopener" class="btn btn-secondary btn-lg">
+            <i class="fab fa-instagram"></i> پیام در اینستاگرام
+          </a>
+        </div>
+        <p class="cta-note">فعلاً برای همه رایگانه — کافیه شروع کنید.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <a href="#top" class="brand">
+      <span class="brand-mark">F</span>
+      FitCoach
+    </a>
+    <div class="footer-links">
+      <a href="#features">امکانات</a>
+      <a href="#how">نحوه کار</a>
+      <a href="#faq">سوالات</a>
+      <a href="tel:09331842949">09331842949</a>
+      <a href="https://instagram.com/fitcoach.club" target="_blank" rel="noopener">fitcoach.club</a>
+    </div>
+    <div class="footer-copy">© ۱۴۰۴ FitCoach</div>
+  </div>
+</footer>
+
+<script>
+// ---- Sticky nav border ----
+const nav = document.getElementById('nav');
+const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 8);
+onScroll();
+window.addEventListener('scroll', onScroll, { passive: true });
+
+// ---- Mobile menu ----
+const navToggle = document.getElementById('navToggle');
+const navMobile = document.getElementById('navMobile');
+navToggle?.addEventListener('click', () => {
+  const open = navMobile.classList.toggle('open');
+  navToggle.setAttribute('aria-expanded', open);
+  navToggle.innerHTML = open
+    ? '<i class="fas fa-xmark"></i>'
+    : '<i class="fas fa-bars"></i>';
+});
+navMobile?.querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => {
+    navMobile.classList.remove('open');
+    navToggle.setAttribute('aria-expanded', 'false');
+    navToggle.innerHTML = '<i class="fas fa-bars"></i>';
+  });
+});
+
+// ---- Reveal on scroll ----
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reveals = document.querySelectorAll('.reveal');
+if (!reduce && 'IntersectionObserver' in window) {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+  reveals.forEach(el => io.observe(el));
+} else {
+  reveals.forEach(el => el.classList.add('in'));
+}
+</script>
+
+</body>
+</html>

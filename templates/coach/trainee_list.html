@@ -1,0 +1,305 @@
+{% extends "coach/base_coach.html" %}
+{% block title %}لیست شاگردان - FitCoach{% endblock %}
+{% block page_title %}شاگردان{% endblock %}
+
+{% block extra_css %}
+<style>
+@media (max-width: 768px) {
+  .col-hide-mobile { display: none; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-users text-accent"></i> لیست شاگردان</h2>
+  <a href="{% url 'coach:trainee_add' %}" class="btn btn-primary">
+    <i class="fas fa-user-plus"></i> افزودن شاگرد
+  </a>
+</div>
+
+<!-- نمای موبایل: لیست جمع‌وجور مثل مخاطبین، با وضعیت برنامه/رژیم کنار اسم -->
+<div class="contact-list">
+  {% for profile in trainees %}
+  <div class="contact-row" onclick="openDetailSheet('sheet-ct-{{ profile.pk }}')">
+    <div class="contact-avatar">{{ profile.user.first_name|slice:":1"|default:"?" }}</div>
+    <div class="contact-info">
+      <div class="contact-name">{{ profile.user.get_full_name|default:profile.user.username }}</div>
+      <div class="contact-badges">
+        {% if profile.active_program_obj %}
+          {% if profile.active_program_obj.is_expired %}
+          <span class="badge badge-danger"><i class="fas fa-dumbbell"></i> منقضی</span>
+          {% elif profile.active_program_obj.needs_renewal_soon %}
+          <span class="badge badge-warning"><i class="fas fa-dumbbell"></i> {{ profile.active_program_obj.days_remaining }} روز</span>
+          {% else %}
+          <span class="badge badge-success"><i class="fas fa-dumbbell"></i> {{ profile.active_program_obj.days_remaining }} روز</span>
+          {% endif %}
+        {% else %}
+        <span class="badge badge-danger"><i class="fas fa-dumbbell"></i> ندارد</span>
+        {% endif %}
+        {% if nutrition_enabled %}
+        {% if profile.active_diet_obj %}
+          {% if profile.active_diet_obj.is_expired %}
+          <span class="badge badge-danger"><i class="fas fa-utensils"></i> منقضی</span>
+          {% elif profile.active_diet_obj.needs_renewal_soon %}
+          <span class="badge badge-warning"><i class="fas fa-utensils"></i> {{ profile.active_diet_obj.days_remaining }} روز</span>
+          {% else %}
+          <span class="badge badge-success"><i class="fas fa-utensils"></i> {{ profile.active_diet_obj.days_remaining }} روز</span>
+          {% endif %}
+        {% else %}
+        <span class="badge badge-danger"><i class="fas fa-utensils"></i> ندارد</span>
+        {% endif %}
+        {% endif %}
+      </div>
+    </div>
+    <i class="fas fa-chevron-left contact-chevron"></i>
+  </div>
+
+  <div class="detail-sheet" id="sheet-ct-{{ profile.pk }}">
+    <div class="detail-sheet-handle"></div>
+    <div class="detail-sheet-header">
+      <div class="detail-sheet-avatar">{{ profile.user.first_name|slice:":1"|default:"?" }}</div>
+      <div>
+        <div class="detail-sheet-title">{{ profile.user.get_full_name|default:profile.user.username }}</div>
+        <div class="detail-sheet-sub">@{{ profile.user.username }}</div>
+      </div>
+      <button type="button" class="detail-sheet-close" onclick="closeAllSheets()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="detail-sheet-body">
+      <div class="detail-row"><span class="d-label">تلفن</span><span class="d-value" dir="ltr">{{ profile.user.phone|default:"-" }}</span></div>
+      <div class="detail-row"><span class="d-label">وزن</span><span class="d-value">{% if profile.weight %}{{ profile.weight }} kg{% else %}-{% endif %}</span></div>
+      <div class="detail-row"><span class="d-label">قد</span><span class="d-value">{% if profile.height %}{{ profile.height }} cm{% else %}-{% endif %}</span></div>
+      <div class="detail-row">
+        <span class="d-label">BMI</span>
+        <span class="d-value">
+          {% if profile.bmi %}<span class="bmi-{{ profile.bmi_status }}">{{ profile.bmi }}</span>{% else %}-{% endif %}
+        </span>
+      </div>
+      {% if profile.weight_diff %}
+      <div class="detail-row">
+        <span class="d-label">فاصله تا وزن سالم</span>
+        <span class="d-value" style="color:{% if profile.weight_diff > 0 %}var(--warning){% else %}var(--info){% endif %}">
+          {% if profile.weight_diff > 0 %}{{ profile.weight_diff_abs }} کیلو اضافه{% else %}{{ profile.weight_diff_abs }} کیلو کمبود{% endif %}
+        </span>
+      </div>
+      {% endif %}
+      <div class="detail-row">
+        <span class="d-label">برنامه تمرینی</span>
+        <span class="d-value">
+          {% if profile.active_program_obj %}
+            {% if profile.active_program_obj.is_expired %}
+            <span class="badge badge-danger"><i class="fas fa-hourglass-end"></i> منقضی</span>
+            {% elif profile.active_program_obj.needs_renewal_soon %}
+            <span class="badge badge-warning"><i class="fas fa-hourglass-half"></i> {{ profile.active_program_obj.days_remaining }} روز مانده</span>
+            {% else %}
+            <span class="badge badge-success"><i class="fas fa-check"></i> {{ profile.active_program_obj.days_remaining }} روز مانده</span>
+            {% endif %}
+          {% else %}<span class="badge badge-danger"><i class="fas fa-times"></i> ندارد</span>{% endif %}
+        </span>
+      </div>
+      {% if nutrition_enabled %}
+      <div class="detail-row">
+        <span class="d-label">رژیم غذایی</span>
+        <span class="d-value">
+          {% if profile.active_diet_obj %}
+            {% if profile.active_diet_obj.is_expired %}
+            <span class="badge badge-danger"><i class="fas fa-hourglass-end"></i> منقضی</span>
+            {% elif profile.active_diet_obj.needs_renewal_soon %}
+            <span class="badge badge-warning"><i class="fas fa-hourglass-half"></i> {{ profile.active_diet_obj.days_remaining }} روز مانده</span>
+            {% else %}
+            <span class="badge badge-success"><i class="fas fa-check"></i> {{ profile.active_diet_obj.days_remaining }} روز مانده</span>
+            {% endif %}
+          {% else %}<span class="badge badge-danger"><i class="fas fa-times"></i> ندارد</span>{% endif %}
+        </span>
+      </div>
+      {% endif %}
+      <div class="detail-row"><span class="d-label">حالت حساب</span>
+        <span class="d-value">
+          <span class="badge {% if profile.user.is_active %}badge-success{% else %}badge-danger{% endif %}">
+            {% if profile.user.is_active %}فعال{% else %}غیرفعال{% endif %}
+          </span>
+        </span>
+      </div>
+    </div>
+    <div class="detail-sheet-actions" style="flex-direction:column;gap:0.5rem">
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
+        <button type="button" class="btn btn-success" style="flex:1;min-width:44%"
+                onclick="copyInviteMessageFor('{{ profile.user.get_full_name|default:profile.user.username|escapejs }}','{{ profile.user.username|escapejs }}','{{ profile.last_password_plain|default:''|escapejs }}')">
+          <i class="fas fa-paper-plane"></i> ارسال به شاگرد
+        </button>
+        <a href="{% url 'coach:program_create' profile.pk %}" class="btn btn-primary" style="flex:1;min-width:44%"><i class="fas fa-clipboard-list"></i> برنامه جدید</a>
+        <form method="POST" action="{% url 'coach:trainee_toggle' profile.pk %}" style="flex:1;min-width:44%">
+          {% csrf_token %}
+          <button class="btn btn-warning" style="width:100%">
+            <i class="fas {% if profile.user.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+            {% if profile.user.is_active %}غیرفعال کن{% else %}فعال کن{% endif %}
+          </button>
+        </form>
+        <form method="POST" action="{% url 'coach:trainee_delete' profile.pk %}" id="del-m-{{ profile.pk }}" style="flex:1;min-width:44%">
+          {% csrf_token %}
+          <button type="button" class="btn btn-danger" style="width:100%"
+                  onclick="confirmDelete('del-m-{{ profile.pk }}', 'آیا از حذف {{ profile.user.get_full_name }} مطمئنید؟')">
+            <i class="fas fa-trash"></i> حذف
+          </button>
+        </form>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
+        <a href="{% url 'coach:trainee_detail' profile.pk %}" class="btn btn-outline" style="flex:1;min-width:44%"><i class="fas fa-eye"></i> مشاهده کامل</a>
+        <a href="{% url 'coach:trainee_edit' profile.pk %}" class="btn btn-outline" style="flex:1;min-width:44%"><i class="fas fa-edit"></i> ویرایش</a>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <i class="fas fa-users"></i>
+    <p>هیچ شاگردی ثبت نشده است</p>
+    <a href="{% url 'coach:trainee_add' %}" class="btn btn-primary">افزودن شاگرد</a>
+  </div>
+  {% endfor %}
+</div>
+<div class="sheet-backdrop" id="sheetBackdrop" onclick="closeAllSheets()"></div>
+
+<!-- نمای دسکتاپ: همون جدول قبلی -->
+<div class="table-container">
+  <table class="data-table" style="table-layout:fixed">
+    <thead>
+      <tr>
+        <th class="col-hide-mobile" style="width:4%">#</th>
+        <th style="width:22%">نام</th>
+        <th class="col-hide-mobile" style="width:13%">تلفن</th>
+        <th class="col-hide-mobile" style="width:9%">وزن</th>
+        <th class="col-hide-mobile" style="width:9%">قد</th>
+        <th class="col-hide-mobile" style="width:11%">BMI</th>
+        <th style="width:13%">برنامه</th>
+        {% if nutrition_enabled %}<th style="width:13%">رژیم</th>{% endif %}
+        <th style="width:10%">حالت</th>
+        <th style="width:11%">عملیات</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for profile in trainees %}
+      <tr>
+        <td class="col-hide-mobile">{{ forloop.counter }}</td>
+        <td>
+          <a href="{% url 'coach:trainee_detail' profile.pk %}" style="display:flex;align-items:center;gap:0.5rem;color:inherit;text-decoration:none">
+            <div class="user-avatar col-hide-mobile" style="width:30px;height:30px;font-size:0.75rem;flex-shrink:0">
+              {{ profile.user.first_name|slice:":1"|default:"?" }}
+            </div>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ profile.user.get_full_name|default:profile.user.username }}</span>
+          </a>
+        </td>
+        <td class="col-hide-mobile">{{ profile.user.phone|default:"-" }}</td>
+        <td class="col-hide-mobile">{% if profile.weight %}{{ profile.weight }} kg{% else %}-{% endif %}</td>
+        <td class="col-hide-mobile">{% if profile.height %}{{ profile.height }} cm{% else %}-{% endif %}</td>
+        <td class="col-hide-mobile">
+          {% if profile.bmi %}
+          <span class="bmi-{{ profile.bmi_status }}">{{ profile.bmi }}</span>
+          {% if profile.weight_diff %}
+          <div style="font-size:0.65rem;color:{% if profile.weight_diff > 0 %}var(--warning){% else %}var(--info){% endif %}">
+            {% if profile.weight_diff > 0 %}<i class="fas fa-arrow-up"></i> {{ profile.weight_diff_abs }} کیلو اضافه{% else %}<i class="fas fa-arrow-down"></i> {{ profile.weight_diff_abs }} کیلو کمبود{% endif %}
+          </div>
+          {% endif %}
+          {% else %}-{% endif %}
+        </td>
+        <td>
+          {% if profile.active_program_obj %}
+            {% if profile.active_program_obj.is_expired %}
+            <span class="badge badge-danger" style="white-space:nowrap"><i class="fas fa-hourglass-end"></i> منقضی</span>
+            {% elif profile.active_program_obj.needs_renewal_soon %}
+            <span class="badge badge-warning" style="white-space:nowrap"><i class="fas fa-hourglass-half"></i> {{ profile.active_program_obj.days_remaining }} روز</span>
+            {% else %}
+            <span class="badge badge-success" style="white-space:nowrap"><i class="fas fa-check"></i> {{ profile.active_program_obj.days_remaining }} روز</span>
+            {% endif %}
+          {% else %}
+          <span class="badge badge-danger" style="white-space:nowrap"><i class="fas fa-times"></i> ندارد</span>
+          {% endif %}
+        </td>
+        {% if nutrition_enabled %}
+        <td>
+          {% if profile.active_diet_obj %}
+            {% if profile.active_diet_obj.is_expired %}
+            <span class="badge badge-danger" style="white-space:nowrap"><i class="fas fa-hourglass-end"></i> منقضی</span>
+            {% elif profile.active_diet_obj.needs_renewal_soon %}
+            <span class="badge badge-warning" style="white-space:nowrap"><i class="fas fa-hourglass-half"></i> {{ profile.active_diet_obj.days_remaining }} روز</span>
+            {% else %}
+            <span class="badge badge-success" style="white-space:nowrap"><i class="fas fa-check"></i> {{ profile.active_diet_obj.days_remaining }} روز</span>
+            {% endif %}
+          {% else %}
+          <span class="badge badge-danger" style="white-space:nowrap"><i class="fas fa-times"></i> ندارد</span>
+          {% endif %}
+        </td>
+        {% endif %}
+        <td>
+          <span class="badge {% if profile.user.is_active %}badge-success{% else %}badge-danger{% endif %}">
+            {% if profile.user.is_active %}فعال{% else %}غیرفعال{% endif %}
+          </span>
+        </td>
+        <td>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
+            <button type="button" class="btn btn-sm btn-success" style="justify-content:center" title="ارسال به شاگرد"
+                    onclick="copyInviteMessageFor('{{ profile.user.get_full_name|default:profile.user.username|escapejs }}','{{ profile.user.username|escapejs }}','{{ profile.last_password_plain|default:''|escapejs }}')">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+            <form method="POST" action="{% url 'coach:trainee_delete' profile.pk %}" id="del-{{ profile.pk }}">
+              {% csrf_token %}
+              <button type="button" class="btn btn-sm btn-danger" style="width:100%;justify-content:center" title="حذف"
+                      onclick="confirmDelete('del-{{ profile.pk }}', 'آیا از حذف {{ profile.user.get_full_name }} مطمئنید؟')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="10">
+          <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <p>هیچ شاگردی ثبت نشده است</p>
+            <a href="{% url 'coach:trainee_add' %}" class="btn btn-primary">افزودن شاگرد</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <i class="fas fa-exclamation-triangle" style="font-size:2rem;color:var(--danger);margin-bottom:1rem"></i>
+    <h3>تأیید حذف</h3>
+    <p id="confirmMessage"></p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="confirmBtn">حذف</button>
+      <button class="btn btn-outline" onclick="closeModal('confirmModal')">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyInviteMessageFor(fullName, username, password) {
+  const siteUrl = window.location.origin + "{% url 'accounts:login' %}";
+  let message = `سلام ${fullName} 👋
+برنامه‌ت تو فیت‌کوچ آماده‌ست!
+
+آدرس سایت: ${siteUrl}
+نام کاربری: ${username}`;
+
+  if (password) {
+    message += `\nرمز عبور: ${password}`;
+  } else {
+    message += `\nرمز عبور: (از مربی خودت بپرس، یا از فرم «ویرایش» پسورد جدید برات تنظیم کنه)`;
+  }
+
+  message += `
+
+برای دسترسی راحت‌تر، بعد از ورود از منوی مرورگرت گزینه‌ی «افزودن به صفحه اصلی» (Add to Home Screen) رو بزن تا مثل یه اپ رو گوشیت داشته باشیش.
+
+موفق باشی 💪`;
+
+  copyTextToClipboard(message);
+}
+</script>
+{% endblock %}

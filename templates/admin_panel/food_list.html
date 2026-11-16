@@ -1,0 +1,71 @@
+{% extends "admin_panel/base_admin.html" %}
+{% block title %}بانک غذایی - FitCoach{% endblock %}
+{% block page_title %}بانک غذایی{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-carrot text-accent"></i> بانک غذایی <span class="badge badge-purple" style="font-size:0.75rem">{{ total_count }} آیتم</span></h2>
+  <a href="{% url 'admin_panel:food_add' %}" class="btn btn-primary"><i class="fas fa-plus"></i> آیتم جدید</a>
+</div>
+
+<form method="GET" style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap">
+  <input type="text" name="q" class="form-control" style="max-width:260px" placeholder="جستجوی نام..." value="{{ q }}">
+  {% if category_filter %}<input type="hidden" name="category" value="{{ category_filter }}">{% endif %}
+  <button type="submit" class="btn btn-outline btn-sm"><i class="fas fa-search"></i> جستجو</button>
+  {% if q %}<a href="{% url 'admin_panel:food_list' %}{% if category_filter %}?category={{ category_filter }}{% endif %}" class="btn btn-outline btn-sm">پاک کردن</a>{% endif %}
+</form>
+
+<!-- فیلتر دسته‌بندی -->
+<div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1.5rem">
+  <a href="{% url 'admin_panel:food_list' %}{% if q %}?q={{ q }}{% endif %}" class="btn btn-sm {% if not category_filter %}btn-primary{% else %}btn-outline{% endif %}">همه</a>
+  {% for val, label in cats %}
+  <a href="?category={{ val }}{% if q %}&q={{ q }}{% endif %}" class="btn btn-sm {% if category_filter == val %}btn-primary{% else %}btn-outline{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>نام</th><th>دسته‌بندی</th><th>واحد</th><th>مقدار پیشنهادی</th><th>عملیات</th></tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td class="col-hide-mobile">{{ forloop.counter }}</td>
+          <td>{{ item.name }}</td>
+          <td><span class="badge badge-info" style="font-size:0.7rem">{{ item.get_category_display }}</span></td>
+          <td class="col-hide-mobile">{{ item.get_default_unit_display }}</td>
+          <td class="col-hide-mobile">{{ item.default_amount|default:"-" }}</td>
+          <td>
+            <div style="display:flex;gap:0.4rem">
+              <a href="{% url 'admin_panel:food_edit' item.pk %}" class="btn btn-sm btn-outline btn-icon"><i class="fas fa-edit"></i></a>
+              <form method="POST" action="{% url 'admin_panel:food_delete' item.pk %}" id="delfood-{{ item.pk }}" style="display:inline">
+                {% csrf_token %}
+                <button type="button" class="btn btn-sm btn-danger btn-icon"
+                        onclick="confirmDelete('delfood-{{ item.pk }}','حذف «{{ item.name }}» از بانک غذایی؟')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty-state"><i class="fas fa-carrot"></i><p>آیتمی یافت نشد</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <i class="fas fa-exclamation-triangle" style="font-size:2rem;color:var(--danger);margin-bottom:1rem"></i>
+    <h3>تأیید حذف</h3><p id="confirmMessage"></p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="confirmBtn">حذف</button>
+      <button class="btn btn-outline" onclick="closeModal('confirmModal')">انصراف</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

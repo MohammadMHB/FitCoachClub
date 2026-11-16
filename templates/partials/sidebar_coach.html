@@ -1,0 +1,26 @@
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-icon"><i class="fas fa-dumbbell"></i></span>
+    <span class="logo-text">FitCoach</span>
+  </div>
+  <nav class="sidebar-nav">
+    <span class="nav-section">اصلی</span>
+    <a href="{% url 'coach:dashboard' %}" class="nav-item"><i class="fas fa-home"></i> داشبورد</a>
+    <span class="nav-section">شاگردان</span>
+    <a href="{% url 'coach:trainee_list' %}" class="nav-item"><i class="fas fa-users"></i> لیست شاگردان</a>
+    <a href="{% url 'coach:trainee_add' %}" class="nav-item"><i class="fas fa-user-plus"></i> افزودن شاگرد</a>
+    <span class="nav-section">تمرین</span>
+    <a href="{% url 'coach:exercise_list' %}" class="nav-item"><i class="fas fa-running"></i> بانک حرکات</a>
+    <span class="nav-section">سیستم</span>
+    <a href="{% url 'coach:notifications' %}" class="nav-item"><i class="fas fa-bell"></i> اعلان‌ها</a>
+    <a href="{% url 'accounts:change_password' %}" class="nav-item active"><i class="fas fa-key"></i> تغییر رمز</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-avatar">{{ user.first_name|slice:":1"|default:user.username|slice:":1" }}</div>
+    <div class="user-meta">
+      <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+      <span class="user-role">مربی</span>
+    </div>
+    <a href="{% url 'accounts:logout' %}" class="logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+  </div>
+</aside>

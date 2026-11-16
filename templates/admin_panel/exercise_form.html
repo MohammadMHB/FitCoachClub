@@ -1,0 +1,77 @@
+{% extends "admin_panel/base_admin.html" %}
+{% block title %}{% if action == 'add' %}حرکت جدید{% else %}ویرایش حرکت{% endif %} - FitCoach{% endblock %}
+{% block page_title %}{% if action == 'add' %}حرکت جدید{% else %}ویرایش حرکت{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="fas fa-dumbbell text-accent"></i> {% if action == 'add' %}حرکت عمومی جدید{% else %}ویرایش: {{ exercise.name }}{% endif %}</h2>
+  <a href="{% url 'admin_panel:exercise_list' %}" class="btn btn-outline"><i class="fas fa-arrow-right"></i> بازگشت</a>
+</div>
+<div class="card" style="max-width:650px">
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">نام حرکت</label>
+        <input type="text" name="name" class="form-control" required value="{{ exercise.name|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">دسته‌بندی</label>
+        <select name="category" class="form-control" required>
+          <option value="">انتخاب...</option>
+          {% for val, label in category_choices %}
+          <option value="{{ val }}" {% if exercise.category == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">توضیحات</label>
+      <textarea name="description" class="form-control" rows="3">{{ exercise.description|default:'' }}</textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">تصویر</label>
+        {% if exercise.image %}
+        <div style="margin-bottom:0.5rem"><img src="{{ exercise.image.url }}" style="height:60px;border-radius:6px"></div>
+        {% endif %}
+        <input type="file" name="image" class="form-control" accept="image/*">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ویدیو</label>
+        {% if exercise.video %}
+        <div style="margin-bottom:0.5rem;font-size:0.8rem;color:var(--text-muted)">
+          <i class="fas fa-video"></i> ویدیو موجود:
+          <a href="{{ exercise.video.url }}" target="_blank" style="color:var(--accent)">مشاهده</a>
+          <label style="margin-right:1rem;cursor:pointer">
+            <input type="checkbox" name="clear_video"> حذف ویدیو
+          </label>
+        </div>
+        {% endif %}
+        <input type="file" name="video" class="form-control" accept="video/*">
+        <small style="color:var(--text-muted);font-size:0.75rem">فرمت‌های مجاز: mp4, mov, avi — حداکثر 100MB</small>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">لینک ویدیو</label>
+      <input type="url" name="video_url" class="form-control" dir="ltr" value="{{ exercise.video_url|default:'' }}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">نمایش برای</label>
+      <select name="visible_to_coach" class="form-control">
+        <option value="">همه مربی‌ها (عمومی)</option>
+        {% for c in coaches %}
+        <option value="{{ c.pk }}" {% if exercise.visible_to_coach_id == c.pk %}selected{% endif %}>
+          فقط {{ c.get_full_name|default:c.username }}
+        </option>
+        {% endfor %}
+      </select>
+      <small style="color:var(--text-muted);font-size:0.75rem">اگر یک مربی خاص انتخاب کنی، این حرکت فقط در پنل همون مربی نمایش داده می‌شود.</small>
+    </div>
+    <div style="display:flex;gap:1rem;justify-content:flex-end">
+      <a href="{% url 'admin_panel:exercise_list' %}" class="btn btn-outline">انصراف</a>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> ذخیره</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
