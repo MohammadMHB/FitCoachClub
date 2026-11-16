@@ -97,7 +97,7 @@
           {% if wex.notes %}<div style="font-size:0.78rem;color:var(--accent-light);margin-top:0.3rem"><i class="fas fa-comment"></i> {{ wex.notes }}</div>{% endif %}
         </div>
         {% if wex.exercise.video_url or wex.exercise.video %}
-        <a href="{{ wex.exercise.video_url|default:wex.exercise.video.url }}" target="_blank"
+        <a href="{% if wex.exercise.video_url %}{{ wex.exercise.video_url }}{% elif wex.exercise.video %}{{ wex.exercise.video.url }}{% endif %}" target="_blank"
            class="btn btn-sm btn-outline btn-icon" title="ویدیو"><i class="fas fa-play"></i></a>
         {% endif %}
       </div>

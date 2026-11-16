@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl" data-theme="dark">
+<html lang="fa" dir="rtl" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#09090b">
+<meta name="theme-color" content="#f5f7fb">
 <title>{% block title %}FitCoach{% endblock %}</title>
 <link rel="manifest" href="/static/manifest.json">
 <link rel="apple-touch-icon" href="/static/img/icon-192.png">
@@ -20,9 +20,10 @@
 }
 </style>
 <link rel="stylesheet" href="/static/icons/fontawesome/css/all.min.css">
-<link rel="stylesheet" href="/static/css/main.css">
+<link rel="stylesheet" href="/static/css/main.css?v=light-blue-1">
 {% block extra_css %}{% endblock %}
 <script defer src="/static/js/online-only.js?v=1"></script>
+<link rel="stylesheet" href="/static/css/experience.css?v=1">
 </head>
 <body>
 {% if user.is_authenticated %}
@@ -30,7 +31,7 @@
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
     <span class="logo-icon"><i class="fas fa-dumbbell"></i></span>
-    <span class="logo-text">FitCoach</span>
+    <span class="brand-lockup"><span class="logo-text">FitCoach<span class="brand-dot">.</span></span><span class="brand-caption">همراه مسیر پیشرفت</span></span>
   </div>
   <nav class="sidebar-nav">
     {% block sidebar_nav %}{% endblock %}
@@ -52,14 +53,12 @@
 </aside>
 
 <header class="topbar">
-  <button class="menu-toggle" id="menuToggle" aria-label="منو">
+  <button class="menu-toggle" id="menuToggle" aria-label="باز کردن منو" aria-controls="sidebar" aria-expanded="false">
     <i class="fas fa-bars"></i>
   </button>
   <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
-  <div class="topbar-actions">
-    <button class="theme-toggle" id="themeToggle" title="تغییر تم">
-      <i class="fas fa-moon" id="themeIcon"></i>
-    </button>
+  <div class="topbar-actions"><time class="topbar-date" id="localDate"></time>
+
     {% block topbar_actions %}{% endblock %}
     <a href="{% url 'accounts:change_password' %}" class="icon-btn" title="تغییر رمز">
       <i class="fas fa-key"></i>
@@ -67,7 +66,8 @@
   </div>
 </header>
 
-<main class="main-content">
+<a class="skip-link" href="#mainContent">رفتن به محتوا</a>
+<main class="main-content" id="mainContent">
   {% if messages %}
   <div class="messages-container">
     {% for msg in messages %}
@@ -93,7 +93,7 @@
 
 {% endif %}
 
-<script src="/static/js/main.js?v=online-only-1"></script>
+<script src="/static/js/main.js?v=light-blue-1"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>
