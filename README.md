@@ -1,86 +1,86 @@
-# 🏋️ FitCoach — سامانه مدیریت تمرین ورزشی
+# 🏋️ FitCoach: Workout Management System
 
-پلتفرم وب فارسی (RTL) برای مربیان و شاگردان باشگاه: ساخت برنامه تمرینی، پیگیری وزن/BMI، بانک حرکات، دانلود PDF برنامه و پنل مدیریت.
-ساخته‌شده با **Django**، سه پنل جدا: **Admin | Coach | Trainee**.
+A Persian (RTL) web platform for gym coaches and trainees: build workout programs, track weight/BMI, manage an exercise library, download programs as PDF, and administer everything from an admin panel.
+Built with **Django**, with three separate panels: **Admin | Coach | Trainee**.
 
-## ✨ ویژگی‌ها
+## ✨ Features
 
-**پنل مربی**
-- مدیریت شاگردان، محاسبه‌ی خودکار BMI
-- بانک حرکات اختصاصی + عمومی (عکس/ویدیو)
-- ساخت برنامه تمرینی (سوپرست، تری‌ست، دراپ‌ست) و آرشیو خودکار برنامه‌های قبلی
-- اعلان‌ها و درخواست برنامه
+**Coach panel**
+- Trainee management with automatic BMI calculation
+- Personal + public exercise library (images/videos)
+- Workout program builder (superset, tri-set, drop-set) with automatic archiving of previous programs
+- Notifications and program requests
 
-**پنل شاگرد**
-- مشاهده‌ی برنامه فعال، درخواست برنامه جدید، نمودار روند وزن/BMI
-- دانلود PDF برنامه (با reportlab)
+**Trainee panel**
+- View the active program, request a new program, weight/BMI trend chart
+- Download the program as PDF (via reportlab)
 
-**پنل ادمین**
-- مدیریت مربیان و شاگردان، حرکات عمومی، لاگ فعالیت
+**Admin panel**
+- Manage coaches and trainees, public exercises, activity log
 
-**فنی**
-- تم دارک/لایت، PWA (Add to Home Screen)، Service Worker و صفحه‌ی آفلاین
-- فونت وزیرمتن، Font Awesome و Chart.js به‌صورت لوکال (بدون CDN)
-- ارسال پیامک با ملی‌پیامک (اختیاری)
+**Technical**
+- Dark/light theme, PWA (Add to Home Screen), Service Worker with offline page
+- Vazirmatn font, Font Awesome and Chart.js served locally (no CDN)
+- Optional SMS sending via Melipayamak
 
-## 🚀 اجرای لوکال
+## 🚀 Running Locally
 
-نیازمندی: Python 3.10+
+Requirements: Python 3.10+
 
 ```bash
 git clone <repo-url>
 cd fitcoach
 
 python -m venv venv
-source venv/bin/activate        # ویندوز: venv\Scripts\activate
+source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-cp .env.example .env            # و مقادیر رو پر کن
-# برای توسعه‌ی لوکال در .env بذار: DJANGO_DEBUG=True
+cp .env.example .env            # then fill in the values
+# For local development, set in .env: DJANGO_DEBUG=True
 
 python manage.py migrate
-python manage.py setup_fitcoach   # ساخت کاربران نمونه (رمزها یک‌بار چاپ می‌شن)
+python manage.py setup_fitcoach   # creates sample users (passwords are printed once)
 python manage.py runserver
 ```
 
-بعد برو به http://127.0.0.1:8000
+Then open http://127.0.0.1:8000
 
-> اگه `DJANGO_DEBUG=False` باشه، `DJANGO_SECRET_KEY` حتماً باید تنظیم شده باشه، وگرنه پروژه بالا نمیاد.
+> If `DJANGO_DEBUG=False`, `DJANGO_SECRET_KEY` must be set, otherwise the project will not start.
 
-## ⚙️ متغیرهای محیطی
+## ⚙️ Environment Variables
 
-همه در `.env.example` توضیح داده شدن: `DJANGO_SECRET_KEY`، `DJANGO_DEBUG`، `DJANGO_ALLOWED_HOSTS`، `DJANGO_CSRF_TRUSTED_ORIGINS`، تنظیمات ملی‌پیامک و `NUTRITION_ENABLED`.
+All are documented in `.env.example`: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS`, Melipayamak SMS settings, and `NUTRITION_ENABLED`.
 
-تولید SECRET_KEY:
+Generate a SECRET_KEY:
 ```bash
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
-## 🧪 تست
+## 🧪 Tests
 
 ```bash
 python manage.py collectstatic --noinput
 python manage.py test
 ```
 
-## 📦 دیپلوی
+## 📦 Deployment
 
-راهنمای deploy در [DEPLOY.md](DEPLOY.md).
+See [DEPLOY.md](DEPLOY.md) for the deployment guide.
 
-## 📁 ساختار
+## 📁 Project Structure
 
 ```
-fitcoach/       تنظیمات Django
-accounts/       کاربران، پروفایل شاگرد، لاگ فعالیت
-coach/          پنل مربی، مدل‌های تمرین و برنامه
-trainee/        پنل شاگرد و ساخت PDF
-admin_panel/    پنل ادمین
-templates/      قالب‌ها
-static/         CSS/JS/فونت/آیکون
-media/          فایل‌های آپلودی (در گیت نیست)
+fitcoach/       Django settings
+accounts/       Users, trainee profile, activity log
+coach/          Coach panel, workout and program models
+trainee/        Trainee panel and PDF generation
+admin_panel/    Admin panel
+templates/      HTML templates
+static/         CSS/JS/fonts/icons
+media/          Uploaded files (not tracked in git)
 ```
 
-## ⚠️ نکات امنیتی
+## ⚠️ Security Notes
 
-- فایل `.env` و دیتابیس `db.sqlite3` هرگز commit نشن (در `.gitignore` هستن).
-- قبل از انتشار، رمزها و SECRET_KEY واقعی رو فقط از طریق متغیر محیطی بده.
+- Never commit the `.env` file or `db.sqlite3` (both are in `.gitignore`).
+- Provide real passwords and the SECRET_KEY only through environment variables.
