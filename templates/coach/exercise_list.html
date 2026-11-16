@@ -15,7 +15,7 @@
 .exercise-thumb:hover .exercise-thumb-btn { opacity:1; }
 .exercise-no-img {
   width:100%;height:100%;display:flex;align-items:center;justify-content:center;
-  background:rgba(108,99,255,0.08);color:var(--text-muted);font-size:2.5rem;
+  background:rgba(37,99,235,0.08);color:var(--text-muted);font-size:2.5rem;
 }
 .cat-filter-wrap { position:relative; }
 .cat-menu {
@@ -83,7 +83,7 @@
       {% if ex.video_url or ex.video %}
       <div class="exercise-actions">
         <button type="button" class="btn btn-sm btn-outline" style="width:100%"
-                onclick="playVideo('{{ ex.video_url|default:ex.video.url|default:'' }}','{{ ex.name }}')">
+                onclick="playVideo('{% if ex.video_url %}{{ ex.video_url|escapejs }}{% elif ex.video %}{{ ex.video.url|escapejs }}{% endif %}','{{ ex.name }}')">
           <i class="fas fa-play"></i> پخش ویدیو
         </button>
       </div>
@@ -130,7 +130,7 @@
       {% if ex.video_url or ex.video %}
       <div class="exercise-actions">
         <button type="button" class="btn btn-sm btn-outline" style="width:100%"
-                onclick="playVideo('{{ ex.video_url|default:ex.video.url|default:'' }}','{{ ex.name }}')">
+                onclick="playVideo('{% if ex.video_url %}{{ ex.video_url|escapejs }}{% elif ex.video %}{{ ex.video.url|escapejs }}{% endif %}','{{ ex.name }}')">
           <i class="fas fa-play"></i> پخش ویدیو
         </button>
       </div>

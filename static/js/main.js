@@ -1,28 +1,8 @@
 // FitCoach Main JS
 
-// ===== THEME =====
-const themeToggle = document.getElementById('themeToggle');
-const themeIcon = document.getElementById('themeIcon');
-const html = document.documentElement;
-
-function setTheme(theme) {
-  html.setAttribute('data-theme', theme);
-  localStorage.setItem('fc_theme', theme);
-  if (themeIcon) {
-    themeIcon.className = theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
-  }
-}
-
-// Init theme
-const savedTheme = localStorage.getItem('fc_theme') || 'dark';
-setTheme(savedTheme);
-
-if (themeToggle) {
-  themeToggle.addEventListener('click', () => {
-    const current = html.getAttribute('data-theme');
-    setTheme(current === 'dark' ? 'light' : 'dark');
-  });
-}
+// FitCoach uses one light appearance across every account and device.
+document.documentElement.setAttribute('data-theme', 'light');
+try { localStorage.setItem('fc_theme', 'light'); } catch (_) {}
 
 // ===== SIDEBAR TOGGLE =====
 const sidebar = document.getElementById('sidebar');
@@ -37,6 +17,7 @@ document.body.appendChild(overlay);
 function toggleSidebar() {
   sidebar?.classList.toggle('open');
   overlay.classList.toggle('active');
+  menuToggle?.setAttribute('aria-expanded', String(sidebar?.classList.contains('open') || false));
   document.body.style.overflow = sidebar?.classList.contains('open') ? 'hidden' : '';
 }
 
@@ -45,12 +26,12 @@ overlay.addEventListener('click', toggleSidebar);
 
 // ===== AUTO DISMISS ALERTS =====
 setTimeout(() => {
-  document.querySelectorAll('.alert').forEach(a => {
+  document.querySelectorAll('.alert-success').forEach(a => {
     a.style.transition = 'opacity 0.5s';
     a.style.opacity = '0';
     setTimeout(() => a.remove(), 500);
   });
-}, 4000);
+}, 6000);
 
 // ===== CONFIRM DELETE MODAL =====
 function confirmDelete(formId, message) {
@@ -78,13 +59,26 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 });
 
 // ===== ACTIVE NAV =====
+// Match the most specific section, so /coach/ is not active on every page.
 const currentPath = window.location.pathname;
-document.querySelectorAll('.nav-item, .bottom-nav-item').forEach(item => {
-  const href = item.getAttribute('href');
-  if (href && currentPath.startsWith(href) && href !== '/') {
-    item.classList.add('active');
-  }
-});
+const sectionPath = currentPath.replace(/^\/coach\/(programs|nutrition)\//, '/coach/trainees/');
+for (const container of document.querySelectorAll('.sidebar-nav, .bottom-nav')) {
+  const items = [...container.querySelectorAll('a.nav-item, a.bottom-nav-item')];
+  const matches = items.filter(item => {
+    const path = new URL(item.href, location.origin).pathname;
+    return sectionPath === path ||
+      (!['/', '/coach/', '/trainee/', '/admin-panel/'].includes(path) && sectionPath.startsWith(path));
+  }).sort((a, b) => b.pathname.length - a.pathname.length);
+  items.forEach(item => {
+    item.classList.toggle('active', item === matches[0]);
+    if (item === matches[0]) item.setAttribute('aria-current', 'page');
+    else item.removeAttribute('aria-current');
+  });
+}
+const dateLabel = document.getElementById('localDate');
+if (dateLabel) dateLabel.textContent = new Intl.DateTimeFormat('fa-IR', {
+  weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Tehran'
+}).format(new Date());
 
 // ===== FILE INPUT PREVIEW =====
 document.querySelectorAll('.file-input-styled').forEach(input => {

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl" data-theme="dark">
+<html lang="fa" dir="rtl" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#09090b">
+<meta name="theme-color" content="#f5f7fb">
 <title>FitCoach - ثبت‌نام شاگرد جدید</title>
 <link rel="manifest" href="/static/manifest.json">
 <style>
@@ -19,7 +19,7 @@
 }
 </style>
 <link rel="stylesheet" href="/static/icons/fontawesome/css/all.min.css">
-<link rel="stylesheet" href="/static/css/main.css">
+<link rel="stylesheet" href="/static/css/main.css?v=light-blue-1">
 <style>
 .login-page {
   min-height: 100vh;
@@ -28,8 +28,8 @@
   justify-content: center;
   padding: 1rem;
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(108,99,255,0.15) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(79,70,229,0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 50%, rgba(37,99,235,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(37,99,235,0.1) 0%, transparent 50%),
     var(--bg-primary);
   position: relative;
   overflow: hidden;
@@ -48,24 +48,24 @@
 }
 [data-theme="light"] .login-card {
   background: rgba(255,255,255,0.85);
-  border-color: rgba(108,99,255,0.15);
-  box-shadow: 0 20px 60px rgba(108,99,255,0.15);
+  border-color: rgba(37,99,235,0.15);
+  box-shadow: 0 20px 60px rgba(37,99,235,0.15);
 }
 .login-logo { text-align: center; margin-bottom: 1.5rem; }
 .login-logo-icon {
   width: 64px; height: 64px;
-  background: linear-gradient(135deg, #6c63ff, #4f46e5);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   border-radius: 18px;
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto 1rem;
   font-size: 1.7rem;
   color: white;
-  box-shadow: 0 8px 30px rgba(108,99,255,0.4);
+  box-shadow: 0 8px 30px rgba(37,99,235,0.4);
 }
 .login-logo h1 {
   font-size: 1.6rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #a29bfe, #6c63ff);
+  background: linear-gradient(135deg, #2563eb, #2563eb);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -92,11 +92,11 @@
 .input-group .form-control.has-toggle { padding-left: 2.75rem; }
 .btn-login {
   padding: 0.875rem; font-size: 1rem; font-weight: 700; border-radius: 12px;
-  background: linear-gradient(135deg, #6c63ff, #4f46e5);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: white; border: none; cursor: pointer; transition: all 0.25s;
-  box-shadow: 0 4px 20px rgba(108,99,255,0.35); letter-spacing: 0.03em;
+  box-shadow: 0 4px 20px rgba(37,99,235,0.35); letter-spacing: 0.03em;
 }
-.btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(108,99,255,0.5); filter: brightness(1.05); }
+.btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(37,99,235,0.5); filter: brightness(1.05); }
 .btn-login:active { transform: translateY(0); }
 .section-label {
   font-size: 0.78rem; color: var(--text-muted); margin: 0.2rem 0 -0.3rem;
@@ -119,8 +119,8 @@
 
 /* راهنمای «بعد از پر کردن این فرم چی می‌شه؟» */
 .how-it-works {
-  background: linear-gradient(135deg, rgba(108,99,255,0.1), rgba(79,70,229,0.05));
-  border: 1px solid rgba(108,99,255,0.2);
+  background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(37,99,235,0.05));
+  border: 1px solid rgba(37,99,235,0.2);
   border-radius: 16px;
   padding: 1.1rem 1.1rem 0.9rem;
   margin-bottom: 1.5rem;
@@ -137,7 +137,7 @@
 .how-step:last-child { margin-bottom: 0; }
 .how-step-num {
   flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
-  background: linear-gradient(135deg, #6c63ff, #4f46e5);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: white; font-size: 0.7rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   margin-top: 0.1rem;
@@ -156,11 +156,11 @@
 }
 .photo-upload-card:hover {
   border-color: var(--accent-light);
-  background: rgba(108,99,255,0.08);
+  background: rgba(37,99,235,0.08);
 }
 .photo-upload-icon {
   flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px;
-  background: rgba(108,99,255,0.15); color: var(--accent-light);
+  background: rgba(37,99,235,0.15); color: var(--accent-light);
   display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
 }
 .photo-upload-text { flex: 1; }
@@ -174,7 +174,7 @@
 /* Toast */
 .toast {
   position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(20px);
-  background: var(--bg-card); border: 1px solid rgba(108,99,255,0.3);
+  background: var(--bg-card); border: 1px solid rgba(37,99,235,0.3);
   color: var(--text-primary); padding: 0.85rem 1.25rem; border-radius: 12px;
   font-size: 0.82rem; display: flex; align-items: center; gap: 0.6rem;
   box-shadow: 0 10px 40px rgba(0,0,0,0.35);
@@ -185,13 +185,12 @@
 .toast i { color: var(--accent-light); font-size: 1rem; }
 </style>
 <script defer src="/static/js/online-only.js?v=1"></script>
+<link rel="stylesheet" href="/static/css/experience.css?v=1">
 </head>
 <body>
 <div class="login-page">
   <div class="login-card">
-    <button class="theme-switch" id="themeToggle" title="تغییر تم">
-      <i class="fas fa-moon" id="themeIcon"></i>
-    </button>
+
 
     <div class="login-logo">
       <div class="login-logo-icon"><i class="fas fa-dumbbell"></i></div>
@@ -324,18 +323,8 @@
 </div>
 
 <script>
-const themeToggle = document.getElementById('themeToggle');
-const themeIcon = document.getElementById('themeIcon');
-const html = document.documentElement;
-function setTheme(t) {
-  html.setAttribute('data-theme', t);
-  localStorage.setItem('fc_theme', t);
-  themeIcon.className = t === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
-}
-setTheme(localStorage.getItem('fc_theme') || 'dark');
-themeToggle.addEventListener('click', () => {
-  setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-});
+document.documentElement.setAttribute('data-theme', 'light');
+try { localStorage.setItem('fc_theme', 'light'); } catch (_) {}
 
 function togglePass() {
   const input = document.getElementById('password');
