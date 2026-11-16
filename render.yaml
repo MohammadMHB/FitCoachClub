@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: fitcoachclub-demo
+    runtime: python
+    plan: free
+    branch: deploy/render-demo
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: bash deployment/start-demo.sh
+    healthCheckPath: /accounts/login/
+    autoDeployTrigger: "off"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.14"
+      - key: DJANGO_SETTINGS_MODULE
+        value: deployment.demo_settings
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DEMO_LOGIN_PASSWORD
+        generateValue: true
+      - key: NUTRITION_ENABLED
+        value: "False"
