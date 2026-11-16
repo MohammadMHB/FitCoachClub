@@ -19,7 +19,7 @@ Built with **Django**, with three separate panels: **Admin | Coach | Trainee**.
 - Manage coaches and trainees, public exercises, activity log
 
 **Technical**
-- Dark/light theme, PWA (Add to Home Screen), Service Worker with offline page
+- Dark/light theme, Add to Home Screen; online connection required (old offline caches are retired)
 - Vazirmatn font, Font Awesome and Chart.js served locally (no CDN)
 - Optional SMS sending via Melipayamak
 
@@ -66,6 +66,15 @@ python manage.py test
 ## 📦 Deployment
 
 See [DEPLOY.md](DEPLOY.md) for the deployment guide.
+
+### Online-only operation
+
+Application pages require an internet connection and use `Cache-Control: no-store`.
+After deploying, run `collectstatic` as usual. Keep `/sw.js` available: it replaces
+previous offline workers, clears `fitcoach-*` caches, and unregisters itself.
+Public pages and panels also load the cleanup script. Existing users need an
+online visit to receive this update; already-open pages remain visible until
+navigation or reload. Installing a home-screen shortcut does not enable offline use.
 
 ## 📁 Project Structure
 

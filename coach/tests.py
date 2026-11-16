@@ -844,39 +844,35 @@ class TraineeDetailRedesignTests(TestCase):
 
 
 class ServiceWorkerTests(TestCase):
-    """
-    تست رفع باگ «بدون اینترنت اصلاً باز نمی‌شه»: علتش این بود که sw.js از
-    زیر /static/ سرو می‌شد و محدوده‌ی کنترلش فقط همون پوشه بود، نه کل سایت.
-    """
+    """Online-only pages and migration for previously installed offline workers."""
 
-    def test_service_worker_served_from_root_not_static(self):
-        client = Client()
-        resp = client.get('/sw.js')
+    def test_retirement_worker_remains_available_without_http_caching(self):
+        resp = self.client.get('/sw.js')
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp['Content-Type'], 'application/javascript')
+        self.assertIn('no-store', resp['Cache-Control'])
 
-    def test_service_worker_content_matches_source_file(self):
-        client = Client()
-        resp = client.get('/sw.js')
-        content = resp.content.decode('utf-8')
-        self.assertIn('CACHE_NAME', content)
-        self.assertIn('OFFLINE_URL', content)
-        self.assertIn("req.mode === 'navigate'", content)
+    def test_retirement_worker_replaces_old_worker_and_clears_app_caches(self):
+        source = self.client.get('/sw.js').content.decode()
+        self.assertIn('self.skipWaiting()', source)
+        self.assertIn("key.startsWith('fitcoach-')", source)
+        self.assertIn('self.registration.unregister()', source)
+        self.assertNotIn('caches.match', source)
+        self.assertNotIn('cache.put', source)
 
-    def test_offline_fallback_page_reachable(self):
-        client = Client()
-        resp = client.get('/static/offline.html')
-        self.assertEqual(resp.status_code, 200)
-        body = b''.join(resp.streaming_content) if hasattr(resp, 'streaming_content') else resp.content
-        self.assertIn('اینترنت'.encode('utf-8'), body)
+    def test_public_and_authenticated_html_are_not_http_cached(self):
+        for path in ['/', '/accounts/login/']:
+            self.assertIn('no-store', self.client.get(path)['Cache-Control'])
+        coach = make_coach()
+        self.client.force_login(coach)
+        self.assertIn('no-store', self.client.get('/coach/')['Cache-Control'])
 
-    def test_main_js_registers_sw_at_root_scope(self):
-        with open('static/js/main.js', encoding='utf-8') as f:
-            js = f.read()
-        self.assertIn("register('/sw.js'", js)
-        self.assertIn("scope: '/'", js)
-        # نباید دیگه رجیستر قدیمی زیر static باشه
-        self.assertNotIn("register('/static/sw.js')", js)
+    def test_new_visitors_do_not_register_an_offline_worker(self):
+        from pathlib import Path
+        js = Path('static/js/online-only.js').read_text(encoding='utf-8')
+        self.assertNotIn('serviceWorker.register(', js)
+        self.assertIn('getRegistrations()', js)
+        self.assertIn('registration.update()', js)
 
 
 # ===================== بازطراحی UI ثبت برنامه تمرینی =====================

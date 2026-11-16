@@ -5,6 +5,7 @@ from django.views.static import serve as static_serve
 from django.shortcuts import redirect, render
 from django.http import JsonResponse, HttpResponse
 from pathlib import Path
+from django.views.decorators.cache import never_cache
 from accounts import views as accounts_views
 
 def home_redirect(request):
@@ -20,16 +21,9 @@ def home_redirect(request):
     return redirect('accounts:login')
 
 
+@never_cache
 def service_worker(request):
-    """
-    فایل sw.js رو از مسیر ریشه‌ی سایت (/sw.js) سرو می‌کنه، نه از زیر
-    /static/. علتش مهمه: محدوده‌ی کنترل (scope) پیش‌فرض یک Service Worker
-    فقط پوشه‌ای‌ست که خودِ فایلش توش سرو می‌شه. اگه sw.js زیر /static/
-    باشه، فقط می‌تونه فایل‌های استاتیک (css/js/فونت) رو موقع آفلاین بودن
-    کنترل کنه و هیچ‌وقت صفحات واقعی برنامه (داشبورد، ورود، لیست شاگردان
-    و...) رو نمی‌بینه — دقیقاً همون دلیلی که برنامه کاملاً آفلاین باز
-    نمی‌شد. با سرو کردن از ریشه، محدوده‌ی پیش‌فرض کل سایت (/) می‌شه.
-    """
+    """Serve the retirement worker so existing offline installs can update."""
     sw_path = Path(settings.BASE_DIR) / 'static' / 'sw.js'
     content = sw_path.read_text(encoding='utf-8')
     return HttpResponse(content, content_type='application/javascript')

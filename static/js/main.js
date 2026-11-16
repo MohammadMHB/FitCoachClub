@@ -96,15 +96,6 @@ document.querySelectorAll('.file-input-styled').forEach(input => {
   });
 });
 
-// ===== PWA Service Worker =====
-// از ریشه‌ی سایت (/sw.js) رجیستر می‌شه تا محدوده‌ی کنترلش کل سایت باشه،
-// نه فقط فایل‌های استاتیک (توضیح کامل در fitcoach/urls.py -> service_worker)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
-  });
-}
-
 // ===== شیت جزئیات به سبک مخاطبین (لیست شاگردان/مربیان در موبایل) =====
 function openDetailSheet(id) {
   const sheet = document.getElementById(id);

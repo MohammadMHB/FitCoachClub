@@ -56,6 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'fitcoach.middleware.OnlineOnlyPagesMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',        # سرو static بدون nginx
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
