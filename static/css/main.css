@@ -1,33 +1,44 @@
 /* ============================
    FITCOACH - MAIN STYLESHEET
-   Light blue design system
+   Glassmorphism Dark Theme
    ============================ */
 
-:root, [data-theme="light"] {
-  color-scheme: light;
-  --bg-primary: #f5f7fb;
-  --bg-secondary: #ffffff;
-  --bg-card: #ffffff;
-  --bg-card-hover: #f6f9ff;
-  --glass-border: #e5ebf3;
-  --glass-shadow: 0 4px 24px rgba(28, 54, 91, .035);
-  --accent: #2563eb;
-  --accent-light: #2563eb;
-  --accent-dark: #1d4ed8;
-  --accent-glow: rgba(37, 99, 235, .12);
-  --success: #128264;
-  --danger: #d04453;
-  --warning: #a86a09;
-  --info: #2471bc;
-  --text-primary: #192b46;
-  --text-secondary: #53647b;
-  --text-muted: #5b6e87;
-  --sidebar-width: 248px;
-  --topbar-height: 80px;
-  --bottom-nav-height: 76px;
-  --radius: 20px;
-  --radius-sm: 12px;
-  --transition: .18s ease;
+:root {
+  --bg-primary: #09090b;
+  --bg-secondary: #131316;
+  --bg-card: rgba(255,255,255,0.05);
+  --bg-card-hover: rgba(255,255,255,0.08);
+  --glass-border: rgba(255,255,255,0.1);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  --accent: #6c63ff;
+  --accent-light: #a29bfe;
+  --accent-dark: #4f46e5;
+  --accent-glow: rgba(108,99,255,0.3);
+  --success: #00b894;
+  --danger: #e74c3c;
+  --warning: #f39c12;
+  --info: #3498db;
+  --text-primary: #e8e8f0;
+  --text-secondary: #9999bb;
+  --text-muted: #666688;
+  --sidebar-width: 260px;
+  --topbar-height: 64px;
+  --bottom-nav-height: 64px;
+  --radius: 16px;
+  --radius-sm: 8px;
+  --transition: 0.25s ease;
+}
+
+[data-theme="light"] {
+  --bg-primary: #f0f2ff;
+  --bg-secondary: #e8eaf6;
+  --bg-card: rgba(255,255,255,0.85);
+  --bg-card-hover: rgba(255,255,255,0.95);
+  --glass-border: rgba(108,99,255,0.15);
+  --glass-shadow: 0 8px 32px rgba(108,99,255,0.12);
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a6a;
+  --text-muted: #8888aa;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -149,7 +160,7 @@ body {
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, var(--accent-glow), rgba(37,99,235,0.2));
+  background: linear-gradient(135deg, var(--accent-glow), rgba(79,70,229,0.2));
   color: var(--accent-light);
   border-right: 3px solid var(--accent);
 }
@@ -311,7 +322,7 @@ body {
   transition: all var(--transition);
 }
 
-.card:hover { border-color: rgba(37,99,235,0.3); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+.card:hover { border-color: rgba(108,99,255,0.3); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
 
 .card-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -355,7 +366,7 @@ body {
 .stat-label { font-size: 0.8rem; color: var(--text-muted); }
 
 /* Color variants */
-.ic-purple { background: rgba(37,99,235,0.15); color: var(--accent-light); }
+.ic-purple { background: rgba(108,99,255,0.15); color: var(--accent-light); }
 .ic-green  { background: rgba(0,184,148,0.15); color: var(--success); }
 .ic-red    { background: rgba(231,76,60,0.15); color: var(--danger); }
 .ic-blue   { background: rgba(52,152,219,0.15); color: var(--info); }
@@ -454,7 +465,7 @@ select.form-control option { background: var(--bg-secondary); color: var(--text-
 }
 
 .data-table th {
-  background: rgba(37,99,235,0.1);
+  background: rgba(108,99,255,0.1);
   padding: 0.875rem 1rem;
   text-align: right;
   font-size: 0.8rem;
@@ -488,7 +499,7 @@ select.form-control option { background: var(--bg-secondary); color: var(--text-
 .badge-danger  { background: rgba(231,76,60,0.16); color: var(--danger); border: 1px solid rgba(231,76,60,0.35); }
 .badge-warning { background: rgba(243,156,18,0.16); color: var(--warning); border: 1px solid rgba(243,156,18,0.35); }
 .badge-info    { background: rgba(52,152,219,0.2); color: #5dade2; border: 1px solid rgba(52,152,219,0.45); }
-.badge-purple  { background: rgba(37,99,235,0.16); color: var(--accent-light); border: 1px solid rgba(37,99,235,0.35); }
+.badge-purple  { background: rgba(108,99,255,0.16); color: var(--accent-light); border: 1px solid rgba(108,99,255,0.35); }
 
 /* ===== ALERTS ===== */
 .messages-container { margin-bottom: 1rem; }
@@ -553,12 +564,12 @@ select.form-control option { background: var(--bg-secondary); color: var(--text-
   overflow: hidden;
   transition: all var(--transition);
 }
-.exercise-card:hover { transform: translateY(-4px); border-color: rgba(37,99,235,0.3); }
+.exercise-card:hover { transform: translateY(-4px); border-color: rgba(108,99,255,0.3); }
 
 .exercise-thumb {
   width: 100%; height: 120px;
   object-fit: cover;
-  background: rgba(37,99,235,0.1);
+  background: rgba(108,99,255,0.1);
   display: flex; align-items: center; justify-content: center;
   color: var(--text-muted);
   font-size: 2.5rem;
@@ -650,7 +661,7 @@ select.form-control option { background: var(--bg-secondary); color: var(--text-
 }
 .program-day-header {
   padding: 0.875rem 1.25rem;
-  background: linear-gradient(135deg, rgba(37,99,235,0.15), rgba(37,99,235,0.1));
+  background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(79,70,229,0.1));
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -674,7 +685,7 @@ select.form-control option { background: var(--bg-secondary); color: var(--text-
   width: 48px; height: 48px;
   border-radius: var(--radius-sm);
   object-fit: cover;
-  background: rgba(37,99,235,0.1);
+  background: rgba(108,99,255,0.1);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   color: var(--text-muted);
@@ -711,7 +722,7 @@ select.form-control option { background: var(--bg-secondary); color: var(--text-
   transition: background var(--transition);
 }
 .notif-item:hover { background: var(--bg-card-hover); }
-.notif-item.unread { background: rgba(37,99,235,0.06); }
+.notif-item.unread { background: rgba(108,99,255,0.06); }
 .notif-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .notif-title { font-weight: 600; font-size: 0.875rem; margin-bottom: 0.2rem; }
 .notif-msg { font-size: 0.8rem; color: var(--text-muted); }
@@ -720,7 +731,7 @@ select.form-control option { background: var(--bg-secondary); color: var(--text-
 /* ===== SCROLL CUSTOM ===== */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(37,99,235,0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(108,99,255,0.3); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 /* ===== MOBILE ===== */

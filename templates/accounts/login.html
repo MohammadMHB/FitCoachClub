@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl" data-theme="light">
+<html lang="fa" dir="rtl" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#f5f7fb">
+<meta name="theme-color" content="#09090b">
 <title>FitCoach - ورود</title>
 <link rel="manifest" href="/static/manifest.json">
 <style>
@@ -19,7 +19,7 @@
 }
 </style>
 <link rel="stylesheet" href="/static/icons/fontawesome/css/all.min.css">
-<link rel="stylesheet" href="/static/css/main.css?v=light-blue-1">
+<link rel="stylesheet" href="/static/css/main.css?v=classic-v1">
 <style>
 .login-page {
   min-height: 100vh;
@@ -28,8 +28,8 @@
   justify-content: center;
   padding: 1rem;
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(37,99,235,0.15) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(37,99,235,0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 50%, rgba(108,99,255,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(79,70,229,0.1) 0%, transparent 50%),
     var(--bg-primary);
   position: relative;
   overflow: hidden;
@@ -40,7 +40,7 @@
   top: -50%;
   right: -20%;
   width: 600px; height: 600px;
-  background: radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(108,99,255,0.08) 0%, transparent 70%);
   animation: float 8s ease-in-out infinite;
 }
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-30px)} }
@@ -60,8 +60,8 @@
 
 [data-theme="light"] .login-card {
   background: rgba(255,255,255,0.85);
-  border-color: rgba(37,99,235,0.15);
-  box-shadow: 0 20px 60px rgba(37,99,235,0.15);
+  border-color: rgba(108,99,255,0.15);
+  box-shadow: 0 20px 60px rgba(108,99,255,0.15);
 }
 
 .login-logo {
@@ -70,18 +70,18 @@
 }
 .login-logo-icon {
   width: 72px; height: 72px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #6c63ff, #4f46e5);
   border-radius: 20px;
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto 1rem;
   font-size: 2rem;
   color: white;
-  box-shadow: 0 8px 30px rgba(37,99,235,0.4);
+  box-shadow: 0 8px 30px rgba(108,99,255,0.4);
 }
 .login-logo h1 {
   font-size: 1.8rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #2563eb, #2563eb);
+  background: linear-gradient(135deg, #a29bfe, #6c63ff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -129,17 +129,17 @@
   font-size: 1rem;
   font-weight: 700;
   border-radius: 12px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #6c63ff, #4f46e5);
   color: white;
   border: none;
   cursor: pointer;
   transition: all 0.25s;
-  box-shadow: 0 4px 20px rgba(37,99,235,0.35);
+  box-shadow: 0 4px 20px rgba(108,99,255,0.35);
   letter-spacing: 0.03em;
 }
 .btn-login:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(37,99,235,0.5);
+  box-shadow: 0 8px 30px rgba(108,99,255,0.5);
   filter: brightness(1.05);
 }
 .btn-login:active { transform: translateY(0); }
@@ -175,18 +175,13 @@
 .theme-switch:hover { background: var(--accent); color: white; border-color: var(--accent); }
 </style>
 <script defer src="/static/js/online-only.js?v=1"></script>
-<link rel="stylesheet" href="/static/css/experience.css?v=1">
 </head>
 <body>
 <div class="login-page">
-  <section class="auth-story" aria-label="فیت‌کوچ">
-    <div class="workspace-eyebrow">YOUR NEXT LEVEL</div>
-    <h2>هر روز، یک قدم<br><span>بهتر از دیروز.</span></h2>
-    <p>برنامهٔ تمرینی، همراهی مربی و مسیر پیشرفتت؛ همه در یک فضای ساده و منظم.</p>
-    <div class="hero-orbit" aria-hidden="true"><div class="hero-symbol"><i class="fas fa-dumbbell"></i></div></div>
-  </section>
   <div class="login-card">
-
+    <button class="theme-switch" id="themeToggle" title="تغییر تم">
+      <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
 
     <div class="login-logo">
       <div class="login-logo-icon">
@@ -245,9 +240,22 @@
 
 <script>
 // Theme
-document.documentElement.setAttribute('data-theme', 'light');
-try { localStorage.setItem('fc_theme', 'light'); } catch (_) {}
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon = document.getElementById('themeIcon');
+const html = document.documentElement;
+function setTheme(t) {
+  html.setAttribute('data-theme', t);
+  localStorage.setItem('fc_theme', t);
+  themeIcon.className = t === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+}
+setTheme(localStorage.getItem('fc_theme_version') === 'classic-v1'
+  ? (localStorage.getItem('fc_theme') || 'dark') : 'dark');
+localStorage.setItem('fc_theme_version', 'classic-v1');
+themeToggle.addEventListener('click', () => {
+  setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
 
+// Password toggle
 function togglePass() {
   const input = document.getElementById('password');
   const icon = document.getElementById('passIcon');

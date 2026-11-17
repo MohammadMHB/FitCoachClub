@@ -2,11 +2,27 @@
 {% block title %}داشبورد - FitCoach{% endblock %}
 {% block page_title %}داشبورد{% endblock %}
 
+{% block extra_css %}
+<style>
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+  .stat-card {
+    padding: 0.6rem 0.4rem;
+    align-items: center;
+    text-align: center;
+    gap: 0.25rem;
+  }
+  .stat-icon { width: 30px; height: 30px; font-size: 0.85rem; }
+  .stat-value { font-size: 1.05rem; }
+  .stat-label { font-size: 0.65rem; }
+}
+.stat-card { align-items: center; text-align: center; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="workspace-greeting"><div><div class="workspace-eyebrow">A LITTLE STRONGER, EVERY DAY</div><h2>سلام {{ user.first_name|default:user.username }}، وقت خودته.</h2><p>قدم‌های کوچک امروز، تغییرهای بزرگ فردا.</p></div><a class="btn btn-outline" href="{% url 'trainee:profile' %}"><i class="fas fa-user"></i> پروفایل من</a></div>
-<section class="workspace-hero"><div class="hero-copy"><span class="hero-kicker"><i class="fas fa-circle"></i> مسیر پیشرفت تو</span><h3>{% if active_program %}آماده‌ای برای قدم بعدی؟{% else %}شروع یک مسیر تازه.{% endif %}</h3><p>{% if active_program %}برنامهٔ تمرینی‌ات آماده است. با ریتم خودت، منظم و پیوسته ادامه بده.{% else %}برنامهٔ مربی‌ات اینجا قرار می‌گیره. تا اون موقع، اطلاعات جسمانیت رو کامل کن.{% endif %}</p><div class="hero-actions">{% if active_program %}<a href="{% url 'trainee:my_program' %}" class="btn btn-white">بریم سراغ برنامه <i class="fas fa-arrow-left"></i></a>{% endif %}<a href="{% url 'trainee:update_metrics' %}" class="btn btn-on-blue">ثبت اندازه‌های جدید</a></div></div><div class="hero-art" aria-hidden="true"><div class="hero-orbit"><div class="hero-symbol"><i class="fas fa-bolt"></i></div></div></div></section>
 <!-- Stats -->
-<div class="stats-grid overview-stats">
+<div class="stats-grid">
   <div class="stat-card">
     <div class="stat-icon ic-purple"><i class="fas fa-weight"></i></div>
     <div class="stat-value">{% if profile.weight %}{{ profile.weight }}{% else %}-{% endif %}</div>
@@ -31,10 +47,8 @@
   </div>
 </div>
 
-<div class="dashboard-layout">
-<div class="dashboard-stack">
 <!-- Active Program Card -->
-<div class="card">
+<div class="card" style="margin-bottom:1.5rem">
   <div class="card-header">
     <span class="card-title"><i class="fas fa-clipboard-list text-accent"></i> برنامه تمرینی</span>
     {% if active_program %}
@@ -46,13 +60,19 @@
 
   {% if active_program %}
   <div>
-    <div style="margin-bottom:1rem">
+    <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem">
       {% for day in active_program.days.all %}
-      <a class="week-row" href="{% url 'trainee:my_program' %}"><span class="week-day">{{ day.get_day_number_display }}</span><span class="person-copy"><strong>جلسهٔ تمرینی {{ forloop.counter }}</strong><small>{{ active_program.title }}</small></span><span class="badge badge-purple">{{ day.exercises.count }} حرکت</span></a>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.75rem;background:var(--bg-card);border:1px solid var(--glass-border);border-radius:var(--radius-sm)">
+        <span style="font-size:0.85rem;font-weight:600">{{ day.get_day_number_display }}</span>
+        <span class="badge badge-purple">{{ day.exercises.count }} حرکت</span>
+      </div>
       {% endfor %}
     </div>
   {% else %}
-  <div><div class="empty-state" style="padding:1.5rem"><i class="fas fa-clipboard"></i><p>هنوز برنامه‌ای ندارید</p></div>
+  <div class="empty-state" style="padding:1.5rem">
+    <i class="fas fa-clipboard"></i>
+    <p>هنوز برنامه‌ای ندارید</p>
+  </div>
   {% endif %}
 
   <!-- Action buttons -->
@@ -100,7 +120,6 @@
   {% endif %}
 </div>
 {% endif %}
-</div><aside class="dashboard-stack"><section class="card note-card"><i class="fas fa-chart-line"></i><h3>پیشرفتت رو ثبت کن.</h3><p>با ثبت اندازه‌های جدید، روند تغییراتت رو بهتر ببین و مسیرت رو همراه مربی ادامه بده.</p><a href="{% url 'trainee:update_metrics' %}" class="btn btn-primary">به‌روزرسانی اندازه‌ها <i class="fas fa-arrow-left"></i></a></section><section class="card"><div class="card-header"><span class="card-title">همراه تو در این مسیر</span></div><div class="dashboard-person"><span class="user-avatar"><i class="fas fa-user-tie"></i></span><span class="person-copy"><strong>{% if profile.coach %}{{ profile.coach.get_full_name|default:profile.coach.username }}{% else %}مربی تعیین نشده{% endif %}</strong><small>مربی اختصاصی تو</small></span></div></section></aside></div>
 {% endblock %}
 
 {% block extra_js %}

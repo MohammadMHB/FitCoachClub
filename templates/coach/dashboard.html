@@ -1,41 +1,78 @@
 {% extends "coach/base_coach.html" %}
 {% block title %}داشبورد مربی - FitCoach{% endblock %}
-{% block page_title %}نمای کلی{% endblock %}
+{% block page_title %}داشبورد{% endblock %}
+
+{% block extra_css %}
+<style>
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+  .stat-card {
+    padding: 0.6rem 0.4rem;
+    align-items: center;
+    text-align: center;
+    gap: 0.25rem;
+  }
+  .stat-icon { width: 30px; height: 30px; font-size: 0.85rem; }
+  .stat-value { font-size: 1.05rem; }
+  .stat-label { font-size: 0.62rem; line-height:1.2; }
+}
+.stat-card { align-items: center; text-align: center; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="workspace-greeting">
-  <div><div class="workspace-eyebrow">YOUR COACHING SPACE</div><h2>سلام {{ user.first_name|default:user.username }}، خوش اومدی.</h2><p>یک روز تازه برای ساختن نسخهٔ بهتر شاگردانت.</p></div>
-  <a class="btn btn-primary" href="{% url 'coach:trainee_add' %}"><i class="fas fa-plus"></i> افزودن شاگرد</a>
-</div>
-<section class="workspace-hero">
-  <div class="hero-copy"><span class="hero-kicker"><i class="fas fa-circle"></i> همراه هر قدم پیشرفت</span><h3>مربی‌گری با تمرکز بیشتر.</h3><p>شاگردانت رو بشناس، برنامهٔ مناسبشون رو طراحی کن و مسیر پیشرفتشون رو کنار هم بسازید.</p><div class="hero-actions"><a class="btn btn-white" href="{% url 'coach:trainee_list' %}">مدیریت شاگردان <i class="fas fa-arrow-left"></i></a><a class="btn btn-on-blue" href="{% url 'coach:exercise_list' %}">بانک حرکات</a></div></div>
-  <div class="hero-art" aria-hidden="true"><div class="hero-orbit"><div class="hero-symbol"><i class="fas fa-dumbbell"></i></div></div></div>
-</section>
-<div class="stats-grid overview-stats three-stats">
-  <div class="stat-card"><div class="stat-icon ic-blue"><i class="fas fa-users"></i></div><div class="stat-label">کل شاگردان</div><div class="stat-value">{{ trainees.count }}</div><div class="stat-label">همراهان مسیر تو</div></div>
-  <div class="stat-card"><div class="stat-icon ic-green"><i class="fas fa-user-check"></i></div><div class="stat-label">شاگردان فعال</div><div class="stat-value">{{ active_trainees }}</div><div class="stat-label">آمادهٔ قدم بعدی</div></div>
-  <div class="stat-card"><div class="stat-icon ic-blue"><i class="fas fa-clipboard-list"></i></div><div class="stat-label">برنامه‌های ثبت‌شده</div><div class="stat-value">{{ total_programs }}</div><div class="stat-label">طراحی‌شده توسط تو</div></div>
-</div>
-<div class="dashboard-layout">
-  <section class="card"><div class="card-header"><span class="card-title">شاگردان من</span><a class="section-link" href="{% url 'coach:trainee_list' %}">مشاهدهٔ همه <i class="fas fa-arrow-left"></i></a></div>
-    {% for trainee in trainees|slice:":5" %}
-    <a class="dashboard-person" href="{% url 'coach:trainee_detail' trainee.pk %}"><span class="user-avatar">{{ trainee.user.first_name|slice:":1"|default:"؟" }}</span><span class="person-copy"><strong>{{ trainee.user.get_full_name|default:trainee.user.username }}</strong><small>مشاهدهٔ پرونده و برنامهٔ تمرینی</small></span><span class="badge {% if trainee.user.is_active %}badge-success{% else %}badge-danger{% endif %}">{% if trainee.user.is_active %}فعال{% else %}غیرفعال{% endif %}</span><i class="fas fa-chevron-left"></i></a>
-    {% empty %}<div class="empty-state"><i class="fas fa-user-plus"></i><p>اولین شاگردت رو به این مسیر دعوت کن.</p><a href="{% url 'coach:trainee_add' %}" class="btn btn-primary">افزودن شاگرد</a></div>{% endfor %}
-  </section>
-  <div class="dashboard-stack">
-    <section class="card"><div class="card-header"><span class="card-title">از اینجا شروع کن</span></div><div class="shortcut-list">
-      <a class="shortcut" href="{% url 'coach:trainee_list' %}"><i class="fas fa-clipboard-list"></i><span><strong>طراحی برنامهٔ تمرینی</strong><small>شاگردت رو انتخاب کن و برنامه بساز</small></span><i class="fas fa-chevron-left"></i></a>
-      <a class="shortcut" href="{% url 'coach:exercise_list' %}"><i class="fas fa-dumbbell"></i><span><strong>کتابخانهٔ حرکات</strong><small>حرکت مناسب برای هر برنامه</small></span><i class="fas fa-chevron-left"></i></a>
-      <a class="shortcut" href="{% url 'coach:notifications' %}"><i class="fas fa-bell"></i><span><strong>اعلان‌ها</strong><small>{% if unread_count %}{{ unread_count }} اعلان خوانده‌نشده{% else %}از تازه‌ترین اتفاق‌ها باخبر شو{% endif %}</small></span><i class="fas fa-chevron-left"></i></a>
-    </div></section>
-    <section class="card invite-card"><div class="card-header"><span class="card-title"><i class="fas fa-link"></i> دعوت به تیم تو</span></div><p>لینک اختصاصی ثبت‌نام شاگرد رو به اشتراک بذار؛ شاگرد جدید مستقیم به پنل تو اضافه می‌شه.</p><div class="invite-field"><input readonly id="coachSignupLink" value="{{ signup_link }}" dir="ltr" aria-label="لینک اختصاصی ثبت‌نام" onclick="this.select()"><button type="button" class="btn btn-primary btn-icon" title="کپی لینک" onclick="copySignupLink(this)"><i class="fas fa-copy"></i></button></div></section>
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon ic-purple"><i class="fas fa-users"></i></div>
+    <div class="stat-value">{{ trainees.count }}</div>
+    <div class="stat-label">کل شاگردان</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon ic-green"><i class="fas fa-user-check"></i></div>
+    <div class="stat-value">{{ active_trainees }}</div>
+    <div class="stat-label">شاگردان فعال</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon ic-red"><i class="fas fa-clipboard-list"></i></div>
+    <div class="stat-value">{{ total_programs }}</div>
+    <div class="stat-label">کل برنامه‌های ثبت‌شده</div>
   </div>
 </div>
-{% endblock %}
-{% block extra_js %}
+
+<div class="card" style="margin-bottom:1.5rem">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-link text-accent"></i> لینک اختصاصی ثبت‌نام شاگرد</span>
+  </div>
+  <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem">
+    این لینک رو بذار تو بیوی اینستاگرام یا هرجای دیگه. هر کی روش کلیک کنه، خودش
+    ثبت‌نام می‌کنه و مستقیم به‌عنوان شاگرد تو اضافه می‌شه.
+  </p>
+  <div style="display:flex;gap:0.5rem">
+    <input type="text" readonly value="{{ signup_link }}" id="coachSignupLink" dir="ltr"
+           style="flex:1;min-width:0;font-size:0.8rem;background:var(--bg-secondary);border:1px solid var(--glass-border);border-radius:8px;padding:0.6rem 0.75rem;color:var(--text-secondary)"
+           onclick="this.select()">
+    <button type="button" class="btn btn-primary btn-icon" title="کپی لینک" onclick="copySignupLink(this)">
+      <i class="fas fa-copy"></i>
+    </button>
+  </div>
+</div>
+
 <script>
 function copySignupLink(btn) {
   const input = document.getElementById('coachSignupLink');
-  copyTextToClipboard(input.value);
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value).then(() => {
+    const icon = btn.querySelector('i');
+    icon.className = 'fas fa-check';
+    setTimeout(() => { icon.className = 'fas fa-copy'; }, 1500);
+  }).catch(() => {
+    document.execCommand('copy');
+  });
 }
 </script>
 {% endblock %}

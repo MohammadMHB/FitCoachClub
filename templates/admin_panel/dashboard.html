@@ -2,10 +2,21 @@
 {% block title %}داشبورد ادمین - FitCoach{% endblock %}
 {% block page_title %}داشبورد مدیریت{% endblock %}
 
+{% block extra_css %}
+<style>
+.stat-card { align-items: center; text-align: center; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="workspace-greeting"><div><div class="workspace-eyebrow">FITCOACH OVERVIEW</div><h2>همه‌چیز، در یک نگاه.</h2><p>خوش آمدید، {{ user.get_full_name|default:user.username }}؛ فضای مدیریت مجموعهٔ شما.</p></div><a href="{% url 'admin_panel:coach_add' %}" class="btn btn-primary"><i class="fas fa-plus"></i> افزودن مربی</a></div>
-<section class="workspace-hero"><div class="hero-copy"><span class="hero-kicker"><i class="fas fa-circle"></i> مدیریت مجموعه</span><h3>یک تجربهٔ بهتر، برای همه.</h3><p>از مدیریت مربیان تا پیگیری شاگردان؛ ابزارهای مجموعهٔ تو همیشه در دسترسن.</p><div class="hero-actions"><a href="{% url 'admin_panel:coach_list' %}" class="btn btn-white">مدیریت مربیان <i class="fas fa-arrow-left"></i></a><a href="{% url 'admin_panel:activity_log' %}" class="btn btn-on-blue">گزارش فعالیت‌ها</a></div></div><div class="hero-art" aria-hidden="true"><div class="hero-orbit"><div class="hero-symbol"><i class="fas fa-layer-group"></i></div></div></div></section>
-<div class="stats-grid overview-stats">
+<div class="page-header">
+  <div>
+    <h2>پنل مدیریت FitCoach</h2>
+    <p class="text-muted" style="font-size:0.85rem;margin-top:0.25rem">خوش آمدید، {{ user.get_full_name|default:user.username }}</p>
+  </div>
+</div>
+
+<div class="stats-grid">
   <div class="stat-card">
     <div class="stat-icon ic-purple"><i class="fas fa-user-tie"></i></div>
     <div class="stat-value">{{ coaches_count }}</div>
