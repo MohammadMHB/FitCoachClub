@@ -1,0 +1,22 @@
+{% extends "accounts/login.html" %}
+{% block login_form %}
+<h2 class="otp-heading">کد ورود رو وارد کن</h2>
+<p class="otp-help">اگر شماره به یک حساب فعال و یکتا متصل باشه، کد پیامکی به <b dir="ltr">{{ phone }}</b> ارسال می‌شه. اعتبار کد {{ expiry_minutes }} دقیقه است.</p>
+<form method="POST" action="{% url 'accounts:otp_verify' %}" class="login-form" data-otp-form>
+  {% csrf_token %}
+  <label class="form-label" for="otpCode">کد ۶ رقمی</label>
+  <input id="otpCode" type="text" name="code" class="form-control otp-code" dir="ltr" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9۰-۹٠-٩]{6}" maxlength="6" minlength="6" required autofocus>
+  <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> تأیید و ورود</button>
+</form>
+<div class="otp-resend">
+  <form method="POST" action="{% url 'accounts:otp_request' %}" data-otp-form>
+    {% csrf_token %}
+    <input type="hidden" name="phone" value="{{ phone }}">
+    <input type="hidden" name="next" value="{{ next_url|default:'/' }}">
+    <button type="submit" class="otp-link-button" data-resend-at="{{ resend_at }}">ارسال دوبارهٔ کد</button>
+    <span class="otp-countdown" aria-live="polite"></span>
+  </form>
+  <a class="otp-switch" href="{% url 'accounts:login' %}?next={{ next_url|default:'/'|urlencode }}">تغییر شمارهٔ موبایل</a>
+  <a class="otp-switch" href="{% url 'accounts:login' %}?method=password&amp;next={{ next_url|default:'/'|urlencode }}">ورود با رمز عبور</a>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+<h2 class="otp-heading">ورود با شمارهٔ موبایل</h2>
+<p class="otp-help">شمارهٔ ثبت‌شده در حساب فیت‌کوچت رو وارد کن.</p>
+{% if not otp_available %}<p class="alert alert-info" role="status">ارسال پیامک هنوز تنظیم نشده است؛ فعلاً با رمز عبور وارد شوید.</p>{% endif %}
+<form method="POST" action="{% url 'accounts:otp_request' %}" class="login-form" data-otp-form>
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next_url|default:'/' }}">
+  <div class="form-group"><label class="form-label" for="phone">شمارهٔ موبایل</label><div class="input-group"><i class="fas fa-mobile-alt input-group-icon"></i><input type="tel" id="phone" name="phone" class="form-control" dir="ltr" inputmode="tel" autocomplete="tel" maxlength="24" required placeholder="09123456789" value="{{ phone_value|default:'' }}" aria-describedby="otpPrivacy"></div></div>
+  <button type="submit" class="btn-login" {% if not otp_available %}disabled{% endif %}><i class="fas fa-paper-plane"></i> دریافت کد ورود</button>
+</form>
+<p class="otp-help" id="otpPrivacy">کد فقط به شمارهٔ یک حساب ثبت‌شده و فعال ارسال می‌شه.</p>
+<a class="otp-switch" href="{% url 'accounts:login' %}?method=password&amp;next={{ next_url|default:'/'|urlencode }}">ورود با نام کاربری و رمز عبور</a>

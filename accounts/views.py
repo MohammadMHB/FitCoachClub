@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
+from django.conf import settings
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from datetime import timedelta
 import re
@@ -29,6 +31,10 @@ def _client_ip(request):
 
 @require_http_methods(["GET", "POST"])
 def login_view(request):
+    if (settings.OTP_LOGIN_ENABLED and request.method == 'GET'
+            and request.GET.get('method') != 'password'):
+        from .otp_views import request_code
+        return request_code(request)
     if request.user.is_authenticated:
         return redirect('home')
     if request.method == 'POST':
@@ -41,7 +47,7 @@ def login_view(request):
                 f'به‌خاطر تلاش‌های ناموفق زیاد، ورود از این آدرس موقتاً بسته شده. '
                 f'{LOGIN_WINDOW_MINUTES} دقیقه‌ی دیگر دوباره امتحان کن.'
             )
-            return render(request, 'accounts/login.html')
+            return render(request, 'accounts/login.html', {'login_mode': 'password', 'otp_enabled': settings.OTP_LOGIN_ENABLED, 'next_url': request.POST.get('next') or request.GET.get('next', '/')})
 
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
@@ -49,13 +55,16 @@ def login_view(request):
         if user is not None:
             if user.is_active:
                 login(request, user)
-                return redirect(request.GET.get('next', '/'))
+                destination = request.POST.get('next') or request.GET.get('next', '/')
+                if not url_has_allowed_host_and_scheme(destination, {request.get_host()}, require_https=request.is_secure()):
+                    destination = '/'
+                return redirect(destination)
             else:
                 messages.error(request, 'حساب کاربری شما غیرفعال است.')
         else:
             LoginAttempt.objects.create(ip_address=ip, username_tried=username[:150])
             messages.error(request, 'نام کاربری یا رمز عبور اشتباه است.')
-    return render(request, 'accounts/login.html')
+    return render(request, 'accounts/login.html', {'login_mode': 'password', 'otp_enabled': settings.OTP_LOGIN_ENABLED, 'next_url': request.POST.get('next') or request.GET.get('next', '/')})
 
 
 @login_required
