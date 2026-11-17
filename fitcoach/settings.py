@@ -184,3 +184,15 @@ WHITENOISE_ALLOW_ALL_ORIGINS = True
 
 # Database connection pooling
 CONN_MAX_AGE = 60  # ثانیه
+
+# SMS login. Keep password access available for existing users without a phone.
+OTP_LOGIN_ENABLED = _env_bool('OTP_LOGIN_ENABLED', True)
+OTP_CODE_TTL_SECONDS = 180
+OTP_RESEND_SECONDS = 60
+OTP_MAX_ATTEMPTS = 5
+OTP_SEND_WINDOW_SECONDS = 900
+OTP_SEND_LIMIT_PHONE = 3
+OTP_SEND_LIMIT_IP = 10
+# Only enable if the hosting proxy overwrites X-Forwarded-For reliably.
+OTP_TRUST_X_FORWARDED_FOR = _env_bool('OTP_TRUST_X_FORWARDED_FOR', False)
+MELIPAYAMAK_OTP_BODY_ID = os.environ.get('MELIPAYAMAK_OTP_BODY_ID', '').strip()

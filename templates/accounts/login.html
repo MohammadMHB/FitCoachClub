@@ -175,6 +175,7 @@
 .theme-switch:hover { background: var(--accent); color: white; border-color: var(--accent); }
 </style>
 <script defer src="/static/js/online-only.js?v=1"></script>
+<link rel="stylesheet" href="/static/css/otp.css?v=1">
 </head>
 <body>
 <div class="login-page">
@@ -202,8 +203,13 @@
     </div>
     {% endif %}
 
+    {% block login_form %}
+    {% if login_mode == 'otp' %}
+      {% include "accounts/partials/otp_request.html" %}
+    {% else %}
     <form method="POST" class="login-form" action="{% url 'accounts:login' %}">
       {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next_url|default:'/' }}">
       <div class="form-group">
         <label class="form-label" for="username">نام کاربری</label>
         <div class="input-group">
@@ -230,6 +236,10 @@
         <i class="fas fa-sign-in-alt"></i> ورود به سامانه
       </button>
     </form>
+      {% if otp_enabled %}<a class="otp-switch" href="{% url 'accounts:login' %}?next={{ next_url|default:'/'|urlencode }}">ورود با کد پیامکی <i class="fas fa-mobile-alt"></i></a>{% endif %}
+    {% endif %}
+    {% endblock %}
+
 
     <div class="support-info">
       <p><i class="fas fa-headset"></i> پشتیبانی</p>
@@ -268,5 +278,6 @@ function togglePass() {
   }
 }
 </script>
+<script src="/static/js/otp.js?v=1"></script>
 </body>
 </html>

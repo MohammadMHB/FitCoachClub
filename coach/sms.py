@@ -13,7 +13,7 @@
 import json
 import logging
 from urllib.request import urlopen, Request
-from urllib.error import URLError, HTTPError
+from urllib.parse import urlencode
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -55,23 +55,52 @@ def send_sms(to: str, text: str) -> bool:
         'isFlash': False,
     }
 
+    return _send_payload(MELIPAYAMAK_URL, payload)
+
+
+def _send_payload(url, payload):
     try:
-        req = Request(
-            MELIPAYAMAK_URL,
-            data=json.dumps(payload).encode('utf-8'),
-            headers={'Content-Type': 'application/json'},
-            method='POST',
-        )
+        req = Request(url, data=urlencode(payload).encode('utf-8'),
+                      headers={'Content-Type': 'application/x-www-form-urlencoded'}, method='POST')
         with urlopen(req, timeout=15) as resp:
-            body = resp.read().decode('utf-8', errors='ignore')
-            logger.info(f'SMS sent to {to}: {body}')
-            return True
-    except (HTTPError, URLError) as e:
-        logger.error(f'SMS error to {to}: {e}')
+            result = json.loads(resp.read().decode('utf-8'))
+        # HTTP 200 alone does not indicate acceptance by Melipayamak.
+        from decimal import Decimal
+        accepted = (isinstance(result, dict) and str(result.get('RetStatus')) == '1'
+                    and Decimal(str(result.get('Value', '0'))) > 0)
+        if not accepted:
+            logger.warning('Melipayamak rejected an SMS request.')
+        return accepted
+    except Exception:
+        # Do not log provider bodies, OTPs, passwords, or recipient numbers.
+        logger.warning('Melipayamak SMS delivery request failed.')
         return False
-    except Exception as e:
-        logger.error(f'SMS unexpected error to {to}: {e}')
+
+
+def otp_sms_configured():
+    return bool(settings.MELIPAYAMAK_USERNAME and settings.MELIPAYAMAK_PASSWORD
+                and (getattr(settings, 'MELIPAYAMAK_OTP_BODY_ID', '')
+                     or settings.MELIPAYAMAK_SENDER))
+
+
+def send_otp_sms(phone, code):
+    if not otp_sms_configured():
         return False
+    body_id = getattr(settings, 'MELIPAYAMAK_OTP_BODY_ID', '')
+    if body_id:
+        try:
+            body_id = int(body_id)
+            if body_id <= 0:
+                return False
+        except (ValueError, TypeError):
+            return False
+        return _send_payload('https://rest.payamak-panel.com/api/SendSMS/BaseServiceNumber', {
+            'username': settings.MELIPAYAMAK_USERNAME,
+            'password': settings.MELIPAYAMAK_PASSWORD,
+            'to': phone, 'text': code, 'bodyId': body_id,
+        })
+    minutes = max(1, settings.OTP_CODE_TTL_SECONDS // 60)
+    return send_sms(phone, f'فیت‌کوچ\nکد ورود: {code}\nاعتبار: {minutes} دقیقه\nاین کد را در اختیار دیگران نگذارید.')
 
 
 def send_new_program_sms(trainee_profile, coach_user):

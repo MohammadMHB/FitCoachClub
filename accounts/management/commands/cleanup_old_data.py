@@ -6,6 +6,7 @@
      کردن تلاش‌های ورود ناموفق تو یه بازه‌ی کوتاه لازمن، نگه‌داشتن طولانی‌مدتشون
      فایده‌ای نداره و فقط جدول رو بزرگ می‌کنه).
   2. پاک کردن اعلان‌های خوانده‌شده‌ای که بیشتر از ۹۰ روزه ساخته شدن.
+  3. پاک کردن چالش‌ها و محدودیت‌های ورود پیامکی قدیمی‌تر از ۲۴ ساعت.
 
 نحوه‌ی وصل کردن به cron روی سرور (crontab -e):
 
@@ -19,7 +20,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import timedelta
 
-from accounts.models import LoginAttempt
+from accounts.models import LoginAttempt, OTPChallenge, OTPRateLimit
 from coach.models import Notification
 
 LOGIN_ATTEMPT_MAX_AGE_HOURS = 24
@@ -47,11 +48,19 @@ class Command(BaseCommand):
         old_notifs = Notification.objects.filter(is_read=True, created_at__lt=notif_cutoff)
         notifs_count = old_notifs.count()
 
+        otp_cutoff = now - timedelta(hours=24)
+        old_challenges = OTPChallenge.objects.filter(created_at__lt=otp_cutoff)
+        old_limits = OTPRateLimit.objects.filter(window_start__lt=otp_cutoff)
+        otp_count = old_challenges.count() + old_limits.count()
+
         if dry_run:
+            self.stdout.write(f'[dry-run] {otp_count} رکورد قدیمی ورود پیامکی حذف می‌شد.')
             self.stdout.write(f'[dry-run] {attempts_count} تلاش ورود قدیمی حذف می‌شد.')
             self.stdout.write(f'[dry-run] {notifs_count} اعلان خوانده‌شده‌ی قدیمی حذف می‌شد.')
             return
 
+        old_challenges.delete()
+        old_limits.delete()
         old_attempts.delete()
         old_notifs.delete()
 

@@ -1,6 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 import secrets
+import uuid
+from django.core.exceptions import ValidationError
+from .phone import normalize_mobile
 
 
 def _generate_referral_code():
@@ -15,6 +18,7 @@ class User(AbstractUser):
     ]
     role  = models.CharField(max_length=10, choices=ROLE_CHOICES, default='trainee')
     phone = models.CharField(max_length=15, blank=True, null=True, verbose_name='شماره تلفن')
+    phone_normalized = models.CharField(max_length=11, blank=True, default='', db_index=True, editable=False)
     # کد یکتای عمومی برای لینک ثبت‌نام شاگرد (فقط برای مربی‌ها معنا داره).
     # از این کد به‌جای username استفاده می‌کنیم که یوزر/پسورد مربی لو نره.
     referral_code = models.CharField(max_length=32, unique=True, null=True, blank=True,
@@ -42,6 +46,12 @@ class User(AbstractUser):
         raise RuntimeError('امکان ساخت کد یکتا وجود نداشت.')
 
     def save(self, *args, **kwargs):
+        try:
+            self.phone_normalized = normalize_mobile(self.phone)
+        except ValidationError:
+            self.phone_normalized = ''
+        if kwargs.get('update_fields') is not None and 'phone' in kwargs['update_fields']:
+            kwargs['update_fields'] = set(kwargs['update_fields']) | {'phone_normalized'}
         # هر مربی همیشه باید یک کد لینک ثبت‌نام داشته باشد؛ اینجا هم پوشش
         # می‌دیم که هرجایی (پنل ادمین، shell، فیکسچر و...) مربی ساخته بشه،
         # کدش خودکار ست بشه، بدون نیاز به یادآوری صدا زدن ensure_referral_code.
@@ -211,3 +221,22 @@ class LoginAttempt(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class OTPChallenge(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='otp_challenges')
+    phone = models.CharField(max_length=11, db_index=True)
+    code_hash = models.CharField(max_length=64)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(db_index=True)
+    consumed_at = models.DateTimeField(null=True, blank=True)
+    delivered = models.BooleanField(default=False)
+
+
+class OTPRateLimit(models.Model):
+    key = models.CharField(max_length=80, primary_key=True)
+    count = models.PositiveIntegerField(default=0)
+    window_start = models.DateTimeField()
+    next_allowed_at = models.DateTimeField()
